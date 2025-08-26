@@ -5,7 +5,7 @@ import time
 import re
 
 def extract_coordinates_from_google_url(google_url):
-    # searches for patterns like daddr=40.712776,-74.005974
+    # searches for patterns like daddr=40.712776,-74.005974 from url
     coords = re.search(r'daddr=([0-9.-]+),([0-9.-]+)', google_url)
     if coords:
         return coords.groups()  # Returns (latitude, longitude)
