@@ -90,6 +90,11 @@ try:
 except:
     directions_url = "url not found"
     lat, lng = None, None
+
+try:
+    current_event_url = driver.current_url
+except:
+    current_event_url = "current url not found"
     
 
 print(f"Event Title: {event_title}")
@@ -100,6 +105,7 @@ print(f"Event Address: {event_address}")
 print(f"Event Image URL: {event_image}")
 print(f"Directions URL: {directions_url}")
 print(f"Latitude: {lat}, Longitude: {lng}")
+print(f"Event Page URL: {current_event_url}")
 
 time.sleep(200)
 driver.quit()
