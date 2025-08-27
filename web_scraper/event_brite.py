@@ -3,6 +3,7 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 import re
+import json
 
 def extract_coordinates_from_google_url(google_url):
     # searches for patterns like daddr=40.712776,-74.005974 from url
@@ -106,6 +107,41 @@ print(f"Event Image URL: {event_image}")
 print(f"Directions URL: {directions_url}")
 print(f"Latitude: {lat}, Longitude: {lng}")
 print(f"Event Page URL: {current_event_url}")
+
+try:
+    script_content = driver.page_source
+    
+    # Find the __SERVER_DATA__ section
+    start = script_content.find('window.__SERVER_DATA__ = ') + len('window.__SERVER_DATA__ = ')
+    end = script_content.find('};', start) + 1
+    
+    if start > len('window.__SERVER_DATA__ = ') - 1:
+        server_data_str = script_content[start:end]
+        server_data = json.loads(server_data_str)
+        
+        # Extract ticket information
+        ticket_classes = server_data['event_listing_response']['tickets']['ticketClasses']
+        
+        total_capacity = 0
+        tickets_sold = 0
+        ticket_status = []
+        
+        for ticket in ticket_classes:
+            capacity = ticket.get('capacity', 0)
+            remaining = ticket.get('quantityRemaining', 0)
+            status = ticket.get('onSaleStatusEnum', '')
+            
+            total_capacity += capacity
+            tickets_sold += (capacity - remaining)
+            ticket_status.append(status)
+        
+        print(f"Total Capacity: {total_capacity}")
+        print(f"Tickets Sold: {tickets_sold}")
+        print(f"Tickets Remaining: {total_capacity - tickets_sold}")
+        print(f"Ticket Statuses: {ticket_status}")
+        
+except:
+    print("Could not extract ticket data")
 
 time.sleep(200)
 driver.quit()
