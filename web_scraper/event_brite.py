@@ -9,6 +9,7 @@ from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from dotenv import load_dotenv
 import os
+import random
 
 # Load environment variables from .env file
 load_dotenv()
@@ -27,22 +28,17 @@ def extract_coordinates_from_google_url(google_url):
 
 def get_events_from_listing_page(driver, website):
     driver.get(website)
-    time.sleep(1)
+    time.sleep(random.uniform(2, 4))  # Random delay to avoid detection
     
     events = driver.find_elements("xpath", '//a[@class="event-card-link "]')
     events_with_text = [event for event in events if event.text.strip()]
     
-    print(f"Found {len(events_with_text)} unique events:")
-    for i, event in enumerate(events_with_text):
-        print(f"Event {i+1}: {event.text}")
-        print(f"  Href: {event.get_attribute('href')}")
-    
+    print(f"Found {len(events_with_text)} unique events on this page")
     return events_with_text
-
 
 def navigate_to_event_page(driver, event):
     """Click on event and switch to new tab if opened."""
-    original_window = driver.current_window_handle
+    main_window = driver.current_window_handle
     
     driver.execute_script("arguments[0].click();", event)
     time.sleep(2)
@@ -51,18 +47,26 @@ def navigate_to_event_page(driver, event):
     all_windows = driver.window_handles
     if len(all_windows) > 1:
         for window in all_windows:
-            if window != original_window:
+            if window != main_window:
                 driver.switch_to.window(window)
                 break
+    
+    return main_window
 
+def close_event_tab_and_return_to_main(driver, main_window):
+    """Close current event tab and return to main listing page."""
+    current_window = driver.current_window_handle
+    if current_window != main_window:
+        driver.close()
+        driver.switch_to.window(main_window)
 
 def expand_directions_section(driver):
     try:
         expand_button = driver.find_element("xpath", '//button[@class="eds-btn eds-btn--link"]')
         driver.execute_script("arguments[0].click();", expand_button)
+        time.sleep(1)
     except:
         print("Could not expand directions section")
-
 
 def extract_basic_event_details(driver):
     event_data = {}
@@ -70,32 +74,32 @@ def extract_basic_event_details(driver):
     try:
         event_data['title'] = driver.find_element("xpath", '//h1[@class="event-title css-0"]').text
     except:
-        event_data['title'] = "title not found"
+        event_data['title'] = None
 
     try:
         event_data['start_date'] = driver.find_element("xpath", '//time[@class="start-date"]').text
     except:
-        event_data['start_date'] = "start date not found"
+        event_data['start_date'] = None
 
     try:
         event_data['date_time'] = driver.find_element("xpath", '//span[@class="date-info__full-datetime"]').text
     except:
-        event_data['date_time'] = "date time not found"
+        event_data['date_time'] = None
 
     try:
         event_data['summary'] = driver.find_element("xpath", '//p[@class="summary"]').text
     except:
-        event_data['summary'] = "summary not found"
+        event_data['summary'] = None
 
     try:
         event_data['address'] = driver.find_element("xpath", '//div[@class="location-info__address"]').text
     except:
-        event_data['address'] = "address not found"
+        event_data['address'] = None
 
     try:
-        event_data['image'] = driver.find_element("xpath", '//img[@class="css-1mghjxa eyu62kx0"]').get_attribute('src')
+        event_data['image'] = driver.find_element("xpath", '//img[@data-testid="hero-img"]').get_attribute('src')
     except:
-        event_data['image'] = "img not found"
+        event_data['image'] = None
 
     try:
         directions_url = driver.find_element("xpath", '//a[@aria-label="Driving directions"]').get_attribute('href')
@@ -104,17 +108,16 @@ def extract_basic_event_details(driver):
         event_data['latitude'] = lat
         event_data['longitude'] = lng
     except:
-        event_data['directions_url'] = "url not found"
+        event_data['directions_url'] = None
         event_data['latitude'] = None
         event_data['longitude'] = None
 
     try:
         event_data['page_url'] = driver.current_url
     except:
-        event_data['page_url'] = "current url not found"
+        event_data['page_url'] = None
     
     return event_data
-
 
 def extract_ticket_data(driver):
     """Extract ticket capacity and sales data from server data."""
@@ -155,30 +158,6 @@ def extract_ticket_data(driver):
         print(f"Could not extract ticket data: {e}")
         return None
 
-
-def print_event_details(event_data, ticket_data):
-    print("\n" + "="*50)
-    print("EVENT DETAILS")
-    print("="*50)
-    
-    print(f"Event Title: {event_data['title']}")
-    print(f"Event Start Date: {event_data['start_date']}")
-    print(f"Event Date and Time: {event_data['date_time']}")
-    print(f"Event Summary: {event_data['summary']}")
-    print(f"Event Address: {event_data['address']}")
-    print(f"Event Image URL: {event_data['image']}")
-    print(f"Directions URL: {event_data['directions_url']}")
-    print(f"Latitude: {event_data['latitude']}, Longitude: {event_data['longitude']}")
-    print(f"Event Page URL: {event_data['page_url']}")
-    
-    if ticket_data:
-        print("\nTICKET INFORMATION:")
-        print(f"Total Capacity: {ticket_data['total_capacity']}")
-        print(f"Tickets Sold: {ticket_data['tickets_sold']}")
-        print(f"Tickets Remaining: {ticket_data['tickets_remaining']}")
-        print(f"Ticket Statuses: {ticket_data['ticket_statuses']}")
-
-
 def setup_database_connection():
     """Establish connection to PostgreSQL database."""
     try:
@@ -195,14 +174,10 @@ def setup_database_connection():
         return None
 
 def insert_or_update_event(event_data, ticket_data, conn):
-    """
-    Insert event into database or update if duplicate exists.
-    Uses event_page_url as the unique identifier.
-    """
+    """Insert event into database or update if duplicate exists."""
     cursor = conn.cursor()
     
     try:
-        # Prepare data for insertion
         insert_data = {
             'event_title': event_data.get('title'),
             'event_start_date': event_data.get('start_date'),
@@ -219,7 +194,6 @@ def insert_or_update_event(event_data, ticket_data, conn):
             'tickets_remaining': ticket_data.get('tickets_remaining') if ticket_data else None,
         }
         
-        # Use ON CONFLICT when same event_page_url exists
         insert_query = """
         INSERT INTO events (
             event_title, event_start_date, event_date_time, event_summary,
@@ -252,15 +226,10 @@ def insert_or_update_event(event_data, ticket_data, conn):
         cursor.execute(insert_query, insert_data)
         conn.commit()
         
-        if cursor.rowcount == 1:
-            print(f"Inserted new event: {insert_data['event_title']}")
-        else:
-            print(f"Updated existing event: {insert_data['event_title']}")
-            
         return True
         
     except Exception as e:
-        print(f"Database insertion error: {e}")
+        print(f"Database insertion error for {insert_data.get('event_title', 'Unknown')}: {e}")
         conn.rollback()
         return False
     finally:
@@ -277,35 +246,101 @@ def save_event_to_database(event_data, ticket_data):
     finally:
         conn.close()
 
+def scrape_single_event(driver, event, main_window):
+    """Scrape data from a single event and save to database."""
+    try:
+        # Navigate to event page
+        navigate_to_event_page(driver, event)
+        time.sleep(random.uniform(2, 4))
+        
+        # Expand directions section
+        expand_directions_section(driver)
+        
+        # Extract data
+        event_data = extract_basic_event_details(driver)
+        ticket_data = extract_ticket_data(driver)
+        
+        # Save to database
+        success = save_event_to_database(event_data, ticket_data)
+        
+        if success:
+            print(f"✓ Scraped and saved: {event_data.get('title', 'Unknown Event')}")
+        else:
+            print(f"✗ Failed to save: {event_data.get('title', 'Unknown Event')}")
+        
+        return success
+        
+    except Exception as e:
+        print(f"Error scraping event: {e}")
+        return False
+    finally:
+        # Always return to main page
+        close_event_tab_and_return_to_main(driver, main_window)
+        time.sleep(random.uniform(1, 2))
+
+def scrape_all_pages(driver, base_url, max_pages=5):
+    """Scrape events from multiple pages."""
+    total_scraped = 0
+    total_saved = 0
+    
+    for page_num in range(1, max_pages + 1):
+        print(f"\n{'='*60}")
+        print(f"SCRAPING PAGE {page_num}")
+        print(f"{'='*60}")
+        
+        # Build URL for current page
+        website = f"{base_url}?page={page_num}"
+        print(f"Loading: {website}")
+        
+        # Get events from current page
+        events_with_text = get_events_from_listing_page(driver, website)
+        
+        if not events_with_text:
+            print(f"No events found on page {page_num}. Stopping.")
+            break
+        
+        main_window = driver.current_window_handle
+        
+        # Scrape each event on this page
+        for i, event in enumerate(events_with_text, 1):
+            print(f"\nScraping event {i}/{len(events_with_text)} on page {page_num}")
+            
+            success = scrape_single_event(driver, event, main_window)
+            total_scraped += 1
+            
+            if success:
+                total_saved += 1
+            
+            # Rate limiting between events
+            time.sleep(random.uniform(2, 4))
+        
+        print(f"\nPage {page_num} completed: {len(events_with_text)} events processed")
+        
+        # Rate limiting between pages
+        time.sleep(random.uniform(3, 6))
+    
+    print(f"\n{'='*60}")
+    print(f"SCRAPING COMPLETED")
+    print(f"Total events scraped: {total_scraped}")
+    print(f"Total events saved to database: {total_saved}")
+    print(f"{'='*60}")
 
 def main():
-    website = 'https://www.eventbrite.com/d/ny--new-york--manhattan/events--today/?page=1'
+    base_url = 'https://www.eventbrite.com/d/ny--new-york--manhattan/events--today/'
+    max_pages = 3  # Adjust this number as needed
     
     driver = setup_driver()
     
     try:
-        events_with_text = get_events_from_listing_page(driver, website)
+        scrape_all_pages(driver, base_url, max_pages)
         
-        if not events_with_text:
-            print("No events found with text")
-            return
-        
-        navigate_to_event_page(driver, events_with_text[0])
-        
-        expand_directions_section(driver)
-        
-        event_data = extract_basic_event_details(driver)
-        ticket_data = extract_ticket_data(driver)
-
-        save_event_to_database(event_data, ticket_data)
-        
-        print_event_details(event_data, ticket_data)
-        
-        time.sleep(10)  
-        
+    except KeyboardInterrupt:
+        print("\nScraping interrupted by user")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
     finally:
         driver.quit()
-
+        print("Browser closed")
 
 if __name__ == "__main__":
     main()
