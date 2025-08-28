@@ -101,13 +101,11 @@ if len(all_windows) > 1:
             driver.switch_to.window(window)
             break
 
-# Extract event data from JSON instead of DOM scraping
 meetup_data = extract_meetup_json_data(driver)
 
 current_event_url = driver.current_url
 
 if meetup_data:
-    # Print data from JSON
     print("\n" + "="*60)
     print("EVENT DATA FROM JSON:")
     print("="*60)
