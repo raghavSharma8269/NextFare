@@ -7,23 +7,18 @@ import json
 import arrow
 
 def extract_meetup_json_data(driver):
-    """Extract event data from Meetup's __NEXT_DATA__ JSON"""
     try:
-        # Find the __NEXT_DATA__ script tag
         script_element = driver.find_element("xpath", '//script[@id="__NEXT_DATA__"]')
         json_content = script_element.get_attribute('innerHTML')
         
-        # Parse the JSON
         data = json.loads(json_content)
         
-        # Navigate to the event data
         event_data = data.get('props', {}).get('pageProps', {}).get('event', {})
         
         if not event_data:
             print("No event data found in JSON")
             return None
             
-        # Extract all the relevant information
         extracted_data = {
             'title': event_data.get('title'),
             'description': event_data.get('description'),
@@ -34,7 +29,6 @@ def extract_meetup_json_data(driver):
             'going_count': event_data.get('goingCount', {}).get('totalCount', 0),
         }
         
-        # Extract venue information
         venue = event_data.get('venue', {})
         if venue:
             extracted_data.update({
@@ -46,7 +40,6 @@ def extract_meetup_json_data(driver):
                 'longitude': venue.get('lng'),
             })
         
-        # Extract featured event photo
         photo = event_data.get('featuredEventPhoto', {})
         if photo:
             extracted_data['image_url'] = photo.get('source')
@@ -66,7 +59,6 @@ def extract_meetup_json_data(driver):
     
 
 def format_iso_datetime_to_readable(iso_datetime):
-    """Convert ISO datetime string to readable format using Arrow"""
     if not iso_datetime:
         return None
     
