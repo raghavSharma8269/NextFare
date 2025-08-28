@@ -7,7 +7,11 @@ import json
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
+from dotenv import load_dotenv
+import os
 
+# Load environment variables from .env file
+load_dotenv()
 
 def setup_driver():
     """Initialize and return Chrome WebDriver."""
@@ -179,11 +183,11 @@ def setup_database_connection():
     """Establish connection to PostgreSQL database."""
     try:
         conn = psycopg2.connect(
-            host="localhost",
-            database="NextFareLocal",
-            user="postgres",
-            password="6f241653",
-            port="5432"
+           host=os.getenv('DB_HOST'),
+            database=os.getenv('DB_NAME'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD'),
+            port=os.getenv('DB_PORT')
         )
         return conn
     except Exception as e:
