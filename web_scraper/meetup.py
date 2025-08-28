@@ -103,8 +103,6 @@ if len(all_windows) > 1:
 
 meetup_data = extract_meetup_json_data(driver)
 
-current_event_url = driver.current_url
-
 if meetup_data:
     print("\n" + "="*60)
     print("EVENT DATA FROM JSON:")
@@ -120,7 +118,7 @@ if meetup_data:
     print(f"Latitude: {meetup_data.get('latitude')}")
     print(f"Longitude: {meetup_data.get('longitude')}")
     print(f"Timezone: {meetup_data.get('timezone')}")
-    print(f"Current Event URL: {current_event_url}")
+    print(f"Current Event URL: {driver.current_url}")
 
 else:
     print("Failed to extract event data from JSON.")
