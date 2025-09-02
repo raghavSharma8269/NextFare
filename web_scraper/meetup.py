@@ -8,104 +8,7 @@ import json
 import arrow
 import random
 import platform
-import psycopg2
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
-def setup_database_connection():
-    conn = psycopg2.connect(
-        host=os.getenv('DB_HOST'),
-        database=os.getenv('DB_NAME'),
-        user=os.getenv('DB_USER'),
-        password=os.getenv('DB_PASSWORD'),
-        port=os.getenv('DB_PORT')
-    )
-    return conn
-
-def save_meetup_event_to_database(meetup_data):
-    conn = setup_database_connection()
-    if not conn:
-        return False
-    
-    cursor = conn.cursor()
-    
-    try:
-        # Format the date_time as readable string with start and end times
-        date_time_formatted = None
-        if meetup_data.get('start_datetime') and meetup_data.get('end_datetime'):
-            try:
-                start_dt = arrow.get(meetup_data['start_datetime'])
-                end_dt = arrow.get(meetup_data['end_datetime'])
-                start_readable = start_dt.format('dddd, MMMM D, YYYY [at] h:mm A')
-                end_readable = end_dt.format('h:mm A')
-                date_time_formatted = f"{start_readable} - {end_readable}"
-            except:
-                pass
-        elif meetup_data.get('start_datetime'):
-            try:
-                start_dt = arrow.get(meetup_data['start_datetime'])
-                date_time_formatted = start_dt.format('dddd, MMMM D, YYYY [at] h:mm A')
-            except:
-                pass
-        
-        insert_data = {
-            'event_title': meetup_data.get('title'),
-            'event_start_date': None,
-            'event_date_time': date_time_formatted,
-            'event_summary': meetup_data.get('description'),
-            'event_address': meetup_data.get('full_address') or meetup_data.get('venue_address'),
-            'event_image_url': meetup_data.get('image_url'),
-            'directions_url': None,
-            'event_page_url': meetup_data.get('event_url'),
-            'latitude': float(meetup_data.get('latitude')) if meetup_data.get('latitude') else None,
-            'longitude': float(meetup_data.get('longitude')) if meetup_data.get('longitude') else None,
-            'total_capacity': None,
-            'tickets_sold': meetup_data.get('going_count'),
-            'tickets_remaining': None,
-        }
-        
-        insert_query = """
-        INSERT INTO events (
-            event_title, event_start_date, event_date_time, event_summary,
-            event_address, event_image_url, directions_url, event_page_url,
-            latitude, longitude, total_capacity, tickets_sold, tickets_remaining,
-            time_added, time_updated
-        ) VALUES (
-            %(event_title)s, %(event_start_date)s, %(event_date_time)s, %(event_summary)s,
-            %(event_address)s, %(event_image_url)s, %(directions_url)s, %(event_page_url)s,
-            %(latitude)s, %(longitude)s, %(total_capacity)s, %(tickets_sold)s, %(tickets_remaining)s,
-            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-        )
-        ON CONFLICT (event_page_url)
-        DO UPDATE SET
-            event_title = EXCLUDED.event_title,
-            event_start_date = EXCLUDED.event_start_date,
-            event_date_time = EXCLUDED.event_date_time,
-            event_summary = EXCLUDED.event_summary,
-            event_address = EXCLUDED.event_address,
-            event_image_url = EXCLUDED.event_image_url,
-            directions_url = EXCLUDED.directions_url,
-            latitude = EXCLUDED.latitude,
-            longitude = EXCLUDED.longitude,
-            total_capacity = EXCLUDED.total_capacity,
-            tickets_sold = EXCLUDED.tickets_sold,
-            tickets_remaining = EXCLUDED.tickets_remaining,
-            time_updated = CURRENT_TIMESTAMP
-        """
-        
-        cursor.execute(insert_query, insert_data)
-        conn.commit()
-        return True
-        
-    except Exception as e:
-        print(f"Database error for {meetup_data.get('title', 'Unknown')}: {e}")
-        conn.rollback()
-        return False
-    finally:
-        cursor.close()
-        conn.close()
+from database_utils import save_meetup_event
 
 def extract_meetup_json_data(driver):
     script_element = driver.find_element("xpath", '//script[@id="__NEXT_DATA__"]')
@@ -209,8 +112,7 @@ def scrape_single_event(driver, event_element, event_index, main_window):
     meetup_data = extract_meetup_json_data(driver)
     
     if meetup_data:
-        # Save to database
-        db_success = save_meetup_event_to_database(meetup_data)
+        db_success = save_meetup_event(meetup_data)
         
         print(f"\nEVENT {event_index}:")
         print(f"Title: {meetup_data.get('title')}")
