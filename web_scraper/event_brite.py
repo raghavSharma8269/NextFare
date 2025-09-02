@@ -4,18 +4,10 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 import re
 import json
-import psycopg2
-from psycopg2.extras import RealDictCursor
-from datetime import datetime
-from dotenv import load_dotenv
-import os
 import random
-
-# Load environment variables from .env file
-load_dotenv()
+from database_utils import save_eventbrite_event
 
 def setup_driver():
-    """Initialize and return Chrome WebDriver."""
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service)
     return driver
@@ -28,7 +20,7 @@ def extract_coordinates_from_google_url(google_url):
 
 def get_events_from_listing_page(driver, website):
     driver.get(website)
-    time.sleep(random.uniform(2, 4))  # Random delay to avoid detection
+    time.sleep(random.uniform(2, 4))
     
     events = driver.find_elements("xpath", '//a[@class="event-card-link "]')
     events_with_text = [event for event in events if event.text.strip()]
@@ -37,13 +29,11 @@ def get_events_from_listing_page(driver, website):
     return events_with_text
 
 def navigate_to_event_page(driver, event):
-    """Click on event and switch to new tab if opened."""
     main_window = driver.current_window_handle
     
     driver.execute_script("arguments[0].click();", event)
     time.sleep(2)
     
-    # Switch to new tab if opened
     all_windows = driver.window_handles
     if len(all_windows) > 1:
         for window in all_windows:
@@ -54,7 +44,6 @@ def navigate_to_event_page(driver, event):
     return main_window
 
 def close_event_tab_and_return_to_main(driver, main_window):
-    """Close current event tab and return to main listing page."""
     current_window = driver.current_window_handle
     if current_window != main_window:
         driver.close()
@@ -66,7 +55,7 @@ def expand_directions_section(driver):
         driver.execute_script("arguments[0].click();", expand_button)
         time.sleep(1)
     except:
-        print("Could not expand directions section")
+        pass
 
 def extract_basic_event_details(driver):
     event_data = {}
@@ -120,11 +109,9 @@ def extract_basic_event_details(driver):
     return event_data
 
 def extract_ticket_data(driver):
-    """Extract ticket capacity and sales data from server data."""
     try:
         script_content = driver.page_source
         
-        # Find the __SERVER_DATA__ section
         start = script_content.find('window.__SERVER_DATA__ = ') + len('window.__SERVER_DATA__ = ')
         end = script_content.find('};', start) + 1
         
@@ -132,7 +119,6 @@ def extract_ticket_data(driver):
             server_data_str = script_content[start:end]
             server_data = json.loads(server_data_str)
             
-            # Extract ticket information
             ticket_classes = server_data['event_listing_response']['tickets']['ticketClasses']
             
             total_capacity = 0
@@ -155,113 +141,19 @@ def extract_ticket_data(driver):
                 'ticket_statuses': ticket_status
             }
     except Exception as e:
-        print(f"Could not extract ticket data: {e}")
         return None
-
-def setup_database_connection():
-    """Establish connection to PostgreSQL database."""
-    try:
-        conn = psycopg2.connect(
-           host=os.getenv('DB_HOST'),
-            database=os.getenv('DB_NAME'),
-            user=os.getenv('DB_USER'),
-            password=os.getenv('DB_PASSWORD'),
-            port=os.getenv('DB_PORT')
-        )
-        return conn
-    except Exception as e:
-        print(f"Database connection error: {e}")
-        return None
-
-def insert_or_update_event(event_data, ticket_data, conn):
-    """Insert event into database or update if duplicate exists."""
-    cursor = conn.cursor()
-    
-    try:
-        insert_data = {
-            'event_title': event_data.get('title'),
-            'event_start_date': event_data.get('start_date'),
-            'event_date_time': event_data.get('date_time'),
-            'event_summary': event_data.get('summary'),
-            'event_address': event_data.get('address'),
-            'event_image_url': event_data.get('image'),
-            'directions_url': event_data.get('directions_url'),
-            'event_page_url': event_data.get('page_url'),
-            'latitude': float(event_data.get('latitude')) if event_data.get('latitude') else None,
-            'longitude': float(event_data.get('longitude')) if event_data.get('longitude') else None,
-            'total_capacity': ticket_data.get('total_capacity') if ticket_data else None,
-            'tickets_sold': ticket_data.get('tickets_sold') if ticket_data else None,
-            'tickets_remaining': ticket_data.get('tickets_remaining') if ticket_data else None,
-        }
-        
-        insert_query = """
-        INSERT INTO events (
-            event_title, event_start_date, event_date_time, event_summary,
-            event_address, event_image_url, directions_url, event_page_url,
-            latitude, longitude, total_capacity, tickets_sold, tickets_remaining,
-            time_added, time_updated
-        ) VALUES (
-            %(event_title)s, %(event_start_date)s, %(event_date_time)s, %(event_summary)s,
-            %(event_address)s, %(event_image_url)s, %(directions_url)s, %(event_page_url)s,
-            %(latitude)s, %(longitude)s, %(total_capacity)s, %(tickets_sold)s, %(tickets_remaining)s,
-            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-        )
-        ON CONFLICT (event_page_url)
-        DO UPDATE SET
-            event_title = EXCLUDED.event_title,
-            event_start_date = EXCLUDED.event_start_date,
-            event_date_time = EXCLUDED.event_date_time,
-            event_summary = EXCLUDED.event_summary,
-            event_address = EXCLUDED.event_address,
-            event_image_url = EXCLUDED.event_image_url,
-            directions_url = EXCLUDED.directions_url,
-            latitude = EXCLUDED.latitude,
-            longitude = EXCLUDED.longitude,
-            total_capacity = EXCLUDED.total_capacity,
-            tickets_sold = EXCLUDED.tickets_sold,
-            tickets_remaining = EXCLUDED.tickets_remaining,
-            time_updated = CURRENT_TIMESTAMP
-        """
-        
-        cursor.execute(insert_query, insert_data)
-        conn.commit()
-        
-        return True
-        
-    except Exception as e:
-        print(f"Database insertion error for {insert_data.get('event_title', 'Unknown')}: {e}")
-        conn.rollback()
-        return False
-    finally:
-        cursor.close()
-
-def save_event_to_database(event_data, ticket_data):
-    conn = setup_database_connection()
-    if not conn:
-        return False
-    
-    try:
-        success = insert_or_update_event(event_data, ticket_data, conn)
-        return success
-    finally:
-        conn.close()
 
 def scrape_single_event(driver, event, main_window):
-    """Scrape data from a single event and save to database."""
     try:
-        # Navigate to event page
         navigate_to_event_page(driver, event)
         time.sleep(random.uniform(2, 4))
         
-        # Expand directions section
         expand_directions_section(driver)
         
-        # Extract data
         event_data = extract_basic_event_details(driver)
         ticket_data = extract_ticket_data(driver)
         
-        # Save to database
-        success = save_event_to_database(event_data, ticket_data)
+        success = save_eventbrite_event(event_data, ticket_data)
         
         if success:
             print(f"✓ Scraped and saved: {event_data.get('title', 'Unknown Event')}")
@@ -274,25 +166,17 @@ def scrape_single_event(driver, event, main_window):
         print(f"Error scraping event: {e}")
         return False
     finally:
-        # Always return to main page
         close_event_tab_and_return_to_main(driver, main_window)
         time.sleep(random.uniform(1, 2))
 
 def scrape_all_pages(driver, base_url, max_pages=5):
-    """Scrape events from multiple pages."""
     total_scraped = 0
     total_saved = 0
     
     for page_num in range(1, max_pages + 1):
-        print(f"\n{'='*60}")
-        print(f"SCRAPING PAGE {page_num}")
-        print(f"{'='*60}")
+        print(f"\nSCRAPING PAGE {page_num}")
         
-        # Build URL for current page
         website = f"{base_url}?page={page_num}"
-        print(f"Loading: {website}")
-        
-        # Get events from current page
         events_with_text = get_events_from_listing_page(driver, website)
         
         if not events_with_text:
@@ -301,9 +185,8 @@ def scrape_all_pages(driver, base_url, max_pages=5):
         
         main_window = driver.current_window_handle
         
-        # Scrape each event on this page
         for i, event in enumerate(events_with_text, 1):
-            print(f"\nScraping event {i}/{len(events_with_text)} on page {page_num}")
+            print(f"Scraping event {i}/{len(events_with_text)} on page {page_num}")
             
             success = scrape_single_event(driver, event, main_window)
             total_scraped += 1
@@ -311,23 +194,18 @@ def scrape_all_pages(driver, base_url, max_pages=5):
             if success:
                 total_saved += 1
             
-            # Rate limiting between events
             time.sleep(random.uniform(2, 4))
         
-        print(f"\nPage {page_num} completed: {len(events_with_text)} events processed")
-        
-        # Rate limiting between pages
+        print(f"Page {page_num} completed: {len(events_with_text)} events processed")
         time.sleep(random.uniform(3, 6))
     
-    print(f"\n{'='*60}")
-    print(f"SCRAPING COMPLETED")
+    print(f"\nSCRAPING COMPLETED")
     print(f"Total events scraped: {total_scraped}")
     print(f"Total events saved to database: {total_saved}")
-    print(f"{'='*60}")
 
 def main():
     base_url = 'https://www.eventbrite.com/d/ny--new-york--manhattan/events--today/'
-    max_pages = 3  # Adjust this number as needed
+    max_pages = 3
     
     driver = setup_driver()
     
@@ -340,7 +218,6 @@ def main():
         print(f"Unexpected error: {e}")
     finally:
         driver.quit()
-        print("Browser closed")
 
 if __name__ == "__main__":
     main()
