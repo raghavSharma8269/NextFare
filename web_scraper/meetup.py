@@ -117,6 +117,8 @@ def scrape_single_event(driver, event_element, event_index, main_window):
         print(f"\nEVENT {event_index}:")
         print(f"Title: {meetup_data.get('title')}")
         print(f"Time: {format_iso_datetime_to_readable(meetup_data.get('start_datetime'))} - {format_iso_datetime_to_readable(meetup_data.get('end_datetime'))}")
+        print(f"Raw Start: {meetup_data.get('start_datetime')}")
+        print(f"Raw End: {meetup_data.get('end_datetime')}")
         print(f"Address: {meetup_data.get('full_address')}")
         print(f"Venue: {meetup_data.get('venue_name')}")
         print(f"Going: {meetup_data.get('going_count')}")
