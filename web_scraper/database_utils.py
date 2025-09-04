@@ -88,8 +88,24 @@ def save_meetup_event(meetup_data):
     cursor = conn.cursor()
     
     try:
-        # Format the date_time as readable string with start and end times
+        # Parse timestamps first
+        raw_start_date = None
+        raw_end_date = None
         date_time_formatted = None
+        
+        if meetup_data.get('start_datetime'):
+            try:
+                raw_start_date = arrow.get(meetup_data['start_datetime']).datetime
+            except:
+                pass
+                
+        if meetup_data.get('end_datetime'):
+            try:
+                raw_end_date = arrow.get(meetup_data['end_datetime']).datetime
+            except:
+                pass
+        
+        # Format readable date_time string
         if meetup_data.get('start_datetime') and meetup_data.get('end_datetime'):
             try:
                 start_dt = arrow.get(meetup_data['start_datetime'])
@@ -120,6 +136,8 @@ def save_meetup_event(meetup_data):
             'total_capacity': None,
             'tickets_sold': meetup_data.get('going_count'),
             'tickets_remaining': None,
+            'event_start_time': raw_start_date,
+            'event_end_time': raw_end_date
         }
         
         insert_query = """
@@ -127,12 +145,12 @@ def save_meetup_event(meetup_data):
             event_title, event_start_date, event_date_time, event_summary,
             event_address, event_image_url, directions_url, event_page_url,
             latitude, longitude, total_capacity, tickets_sold, tickets_remaining,
-            time_added, time_updated
+            event_start_time, event_end_time, time_added, time_updated
         ) VALUES (
             %(event_title)s, %(event_start_date)s, %(event_date_time)s, %(event_summary)s,
             %(event_address)s, %(event_image_url)s, %(directions_url)s, %(event_page_url)s,
             %(latitude)s, %(longitude)s, %(total_capacity)s, %(tickets_sold)s, %(tickets_remaining)s,
-            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            %(event_start_time)s, %(event_end_time)s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
         )
         ON CONFLICT (event_page_url)
         DO UPDATE SET
@@ -148,6 +166,8 @@ def save_meetup_event(meetup_data):
             total_capacity = EXCLUDED.total_capacity,
             tickets_sold = EXCLUDED.tickets_sold,
             tickets_remaining = EXCLUDED.tickets_remaining,
+            event_start_time = EXCLUDED.event_start_time,
+            event_end_time = EXCLUDED.event_end_time,
             time_updated = CURRENT_TIMESTAMP
         """
         
