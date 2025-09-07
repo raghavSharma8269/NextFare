@@ -1,10 +1,16 @@
 package com.example.backend_NextFare;
 
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 @SpringBootApplication
 public class BackendNextFareApplication {
@@ -12,6 +18,22 @@ public class BackendNextFareApplication {
 	private final Logger logger = LoggerFactory.getLogger(BackendNextFareApplication.class);
 
 	public static void main(String[] args) {
+		try {
+			InputStream serviceAccount = BackendNextFareApplication.class
+					.getClassLoader()
+					.getResourceAsStream("FirebaseServiceAccountKey.json");
+
+			FirebaseOptions options = new FirebaseOptions.Builder()
+					.setCredentials(GoogleCredentials.fromStream(serviceAccount))
+					.build();
+
+			FirebaseApp.initializeApp(options);
+			System.out.println("Firebase initialized successfully.");
+
+		} catch (IOException e) {
+			System.out.println("Firebase initialization error: " + e.getMessage());
+		}
+
 		SpringApplication.run(BackendNextFareApplication.class, args);
 		System.out.println("BackendNextFareApplication started successfully!!!");
 	}
