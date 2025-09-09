@@ -37,6 +37,7 @@ def save_eventbrite_event(event_data, ticket_data):
             'total_capacity': ticket_data.get('total_capacity') if ticket_data else None,
             'tickets_sold': ticket_data.get('tickets_sold') if ticket_data else None,
             'tickets_remaining': ticket_data.get('tickets_remaining') if ticket_data else None,
+            'event_source': 'EVENTBRITE'
         }
         
         insert_query = """
@@ -44,12 +45,12 @@ def save_eventbrite_event(event_data, ticket_data):
             event_title, event_start_date, event_date_time, event_summary,
             event_address, event_image_url, directions_url, event_page_url,
             latitude, longitude, total_capacity, tickets_sold, tickets_remaining,
-            time_added, time_updated
+            time_added, time_updated, event_source
         ) VALUES (
             %(event_title)s, %(event_start_date)s, %(event_date_time)s, %(event_summary)s,
             %(event_address)s, %(event_image_url)s, %(directions_url)s, %(event_page_url)s,
             %(latitude)s, %(longitude)s, %(total_capacity)s, %(tickets_sold)s, %(tickets_remaining)s,
-            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, %(event_source)s
         )
         ON CONFLICT (event_page_url)
         DO UPDATE SET
@@ -137,7 +138,9 @@ def save_meetup_event(meetup_data):
             'tickets_sold': meetup_data.get('going_count'),
             'tickets_remaining': None,
             'event_start_time': raw_start_date,
-            'event_end_time': raw_end_date
+            'event_end_time': raw_end_date,
+            'event_source': 'MEETUP'
+
         }
         
         insert_query = """
@@ -150,7 +153,7 @@ def save_meetup_event(meetup_data):
             %(event_title)s, %(event_start_date)s, %(event_date_time)s, %(event_summary)s,
             %(event_address)s, %(event_image_url)s, %(directions_url)s, %(event_page_url)s,
             %(latitude)s, %(longitude)s, %(total_capacity)s, %(tickets_sold)s, %(tickets_remaining)s,
-            %(event_start_time)s, %(event_end_time)s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            %(event_start_time)s, %(event_end_time)s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, %(event_source)s
         )
         ON CONFLICT (event_page_url)
         DO UPDATE SET
