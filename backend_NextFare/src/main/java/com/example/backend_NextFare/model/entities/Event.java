@@ -1,5 +1,6 @@
 package com.example.backend_NextFare.model.entities;
 
+import com.example.backend_NextFare.model.enums.EventSource;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -55,6 +56,9 @@ public class Event {
 
     @Column(name = "event_end_time")
     private LocalDateTime eventEndTime;
+
+    @Column(name = "event_source")
+    private EventSource eventSource;
 
     @CreationTimestamp
     @Column(name = "time_added", updatable = false)
