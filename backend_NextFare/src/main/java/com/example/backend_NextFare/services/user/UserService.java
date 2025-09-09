@@ -6,14 +6,19 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.firebase.cloud.FirestoreClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class UserService {
 
     public ResponseEntity<UserDTO> createOrUpdateUser(UserDTO userDTO, Authentication auth) {
+
+        log.info("Executing UserService.createOrUpdateUser \n{}", userDTO.toString());
+
         try{
             FirebaseAuthToken firebaseAuth = (FirebaseAuthToken) auth;
             String uid = firebaseAuth.getUid();
@@ -25,6 +30,8 @@ public class UserService {
             DocumentSnapshot existingProfile = db.collection("users").document(uid).get().get();
 
             if (!existingProfile.exists()) {
+                log.info("Creating new user in firestore with uid: {}", uid);
+
                 //Create new profile in firestore
                 UserDTO newProfile = new UserDTO();
                 newProfile.setUid(uid);
@@ -34,10 +41,16 @@ public class UserService {
                 newProfile.setUpdatedAt(Timestamp.now());
 
                 db.collection("users").document(uid).set(newProfile).get();
+
+                log.info("User created successfully with uid: {}", uid);
+
                 return ResponseEntity.ok(newProfile);
             }
             else {
                 // Update existing profile
+                log.info("Updating new user in firestore with uid: {}", uid);
+
+
                 UserDTO existingData = existingProfile.toObject(UserDTO.class);
 
                 if (userDTO.getLastLocation() != null) {
@@ -45,22 +58,27 @@ public class UserService {
                 }
 
                 db.collection("users").document(uid).set(existingData).get();
+
+                log.info("User created successfully with uid: {}", uid);
+
                 return ResponseEntity.ok(existingData);
             }
 
         }catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error(e.getMessage());
             return ResponseEntity.status(500).body(null);
         }
     }
 
     public ResponseEntity<?> getUser(Authentication auth) {
 
-        System.out.println("Getting user profile...");
+        log.info("Executing UserService.getUser");
 
         try {
             FirebaseAuthToken firebaseAuth = (FirebaseAuthToken) auth;
             String uid = firebaseAuth.getPrincipal().toString();
+
+            log.info("Getting user with uid: {}", uid);
 
             Firestore db = FirestoreClient.getFirestore();
             DocumentSnapshot document = db.collection("users").document(uid).get().get();
@@ -73,7 +91,7 @@ public class UserService {
             }
 
         } catch (Exception e) {
-            System.out.println("Error Getting User:" + e.getMessage());
+            log.error("Error getting user: {}", e.getMessage());
             return ResponseEntity.status(500).body(null);
         }
     }
