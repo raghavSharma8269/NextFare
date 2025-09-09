@@ -1,8 +1,10 @@
 package com.example.backend_NextFare.controllers;
 
+import com.example.backend_NextFare.security.FirebaseAuthToken;
 import com.example.backend_NextFare.services.testServices.TestDTO;
 import com.example.backend_NextFare.services.testServices.TestService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -38,6 +40,15 @@ public class TestController {
     @GetMapping("/debug")
     public ResponseEntity<String> debug() throws Exception {
         return testService.debugConnection();
+    }
+
+    @GetMapping("/protected")
+    public ResponseEntity<String> protectedEndpoint(Authentication auth) {
+        FirebaseAuthToken firebaseAuth = (FirebaseAuthToken) auth;
+        String userId = firebaseAuth.getPrincipal().toString();
+        String email = firebaseAuth.getEmail();
+
+        return ResponseEntity.ok("Hello " + email + " (ID: " + userId + ")");
     }
 
 
