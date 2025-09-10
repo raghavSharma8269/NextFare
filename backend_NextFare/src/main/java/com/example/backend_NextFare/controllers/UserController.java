@@ -1,5 +1,6 @@
 package com.example.backend_NextFare.controllers;
 
+import com.example.backend_NextFare.dto.user.LastLocation;
 import com.example.backend_NextFare.dto.user.UserDTO;
 import com.example.backend_NextFare.services.user.UserService;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,13 @@ public class UserController {
             Authentication auth,
             @RequestBody UserDTO userDTO) {
         return userService.createOrUpdateUser(userDTO, auth);
+    }
+
+    @PostMapping("/profile/location")
+    public ResponseEntity<String> updateLastLocation(
+            Authentication auth,
+            @RequestBody LastLocation updatedLocation) {
+        return userService.updateUserLocation(updatedLocation, auth);
     }
 
 }
