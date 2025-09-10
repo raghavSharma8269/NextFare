@@ -124,55 +124,47 @@ def save_meetup_event(meetup_data):
                 pass
         
         insert_data = {
-            'event_title': meetup_data.get('title'),
-            'event_start_date': None,
-            'event_date_time': date_time_formatted,
-            'event_summary': meetup_data.get('description'),
-            'event_address': meetup_data.get('full_address') or meetup_data.get('venue_address'),
-            'event_image_url': meetup_data.get('image_url'),
-            'directions_url': None,
-            'event_page_url': meetup_data.get('event_url'),
-            'latitude': float(meetup_data.get('latitude')) if meetup_data.get('latitude') else None,
-            'longitude': float(meetup_data.get('longitude')) if meetup_data.get('longitude') else None,
-            'total_capacity': None,
-            'tickets_sold': meetup_data.get('going_count'),
-            'tickets_remaining': None,
-            'event_start_time': raw_start_date,
-            'event_end_time': raw_end_date,
-            'event_source': 'MEETUP'
-
-        }
+    'event_title': meetup_data.get('title'),
+    'event_date_time': date_time_formatted,
+    'event_summary': meetup_data.get('description'),
+    'event_address': meetup_data.get('full_address') or meetup_data.get('venue_address'),
+    'event_image_url': meetup_data.get('image_url'),
+    'event_page_url': meetup_data.get('event_url'),
+    'latitude': float(meetup_data.get('latitude')) if meetup_data.get('latitude') else None,
+    'longitude': float(meetup_data.get('longitude')) if meetup_data.get('longitude') else None,
+    'tickets_sold': meetup_data.get('going_count'),
+    'event_start_time': raw_start_date,
+    'event_end_time': raw_end_date,
+    'event_source': 'MEETUP'
+}
         
         insert_query = """
-        INSERT INTO events (
-            event_title, event_start_date, event_date_time, event_summary,
-            event_address, event_image_url, directions_url, event_page_url,
-            latitude, longitude, total_capacity, tickets_sold, tickets_remaining,
-            event_start_time, event_end_time, time_added, time_updated
-        ) VALUES (
-            %(event_title)s, %(event_start_date)s, %(event_date_time)s, %(event_summary)s,
-            %(event_address)s, %(event_image_url)s, %(directions_url)s, %(event_page_url)s,
-            %(latitude)s, %(longitude)s, %(total_capacity)s, %(tickets_sold)s, %(tickets_remaining)s,
-            %(event_start_time)s, %(event_end_time)s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, %(event_source)s
-        )
-        ON CONFLICT (event_page_url)
-        DO UPDATE SET
-            event_title = EXCLUDED.event_title,
-            event_start_date = EXCLUDED.event_start_date,
-            event_date_time = EXCLUDED.event_date_time,
-            event_summary = EXCLUDED.event_summary,
-            event_address = EXCLUDED.event_address,
-            event_image_url = EXCLUDED.event_image_url,
-            directions_url = EXCLUDED.directions_url,
-            latitude = EXCLUDED.latitude,
-            longitude = EXCLUDED.longitude,
-            total_capacity = EXCLUDED.total_capacity,
-            tickets_sold = EXCLUDED.tickets_sold,
-            tickets_remaining = EXCLUDED.tickets_remaining,
-            event_start_time = EXCLUDED.event_start_time,
-            event_end_time = EXCLUDED.event_end_time,
-            time_updated = CURRENT_TIMESTAMP
-        """
+INSERT INTO events (
+    event_title, event_date_time, event_summary,
+    event_address, event_image_url, event_page_url,
+    latitude, longitude, tickets_sold,
+    event_start_time, event_end_time, event_source
+) VALUES (
+    %(event_title)s, %(event_date_time)s, %(event_summary)s,
+    %(event_address)s, %(event_image_url)s, %(event_page_url)s,
+    %(latitude)s, %(longitude)s, %(tickets_sold)s,
+    %(event_start_time)s, %(event_end_time)s, %(event_source)s
+)
+ON CONFLICT (event_page_url)
+DO UPDATE SET
+    event_title = EXCLUDED.event_title,
+    event_date_time = EXCLUDED.event_date_time,
+    event_summary = EXCLUDED.event_summary,
+    event_address = EXCLUDED.event_address,
+    event_image_url = EXCLUDED.event_image_url,
+    latitude = EXCLUDED.latitude,
+    longitude = EXCLUDED.longitude,
+    tickets_sold = EXCLUDED.tickets_sold,
+    event_start_time = EXCLUDED.event_start_time,
+    event_end_time = EXCLUDED.event_end_time,
+    event_source = EXCLUDED.event_source,
+    time_updated = CURRENT_TIMESTAMP
+"""
         
         cursor.execute(insert_query, insert_data)
         conn.commit()
