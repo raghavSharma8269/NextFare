@@ -58,6 +58,7 @@ public class Event {
     private LocalDateTime eventEndTime;
 
     @Column(name = "event_source")
+    @Enumerated(EnumType.STRING)
     private EventSource eventSource;
 
     @CreationTimestamp
