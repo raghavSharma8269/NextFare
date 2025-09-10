@@ -59,7 +59,7 @@ public class UserService {
 
                 db.collection("users").document(uid).set(existingData).get();
 
-                log.info("User created successfully with uid: {}", uid);
+                log.info("User updated successfully with uid: {}", uid);
 
                 return ResponseEntity.ok(existingData);
             }
