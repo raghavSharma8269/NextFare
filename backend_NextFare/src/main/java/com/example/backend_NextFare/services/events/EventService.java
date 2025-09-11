@@ -112,4 +112,15 @@ public class EventService {
         return north <= nycNorthLimit && south >= nycSouthLimit &&
                 east <= nycEastLimit && west >= nycWestLimit;
     }
+
+    private String createCacheKey(double north, double south, double east, double west) {
+
+        // Round to 4 decimal places to group similar requests together
+        String roundedNorth = String.format("%.4f", north);
+        String roundedSouth = String.format("%.4f", south);
+        String roundedEast = String.format("%.4f", east);
+        String roundedWest = String.format("%.4f", west);
+
+        return CACHE_PREFIX + roundedNorth + ":" + roundedSouth + ":" + roundedEast + ":" + roundedWest;
+    }
 }
