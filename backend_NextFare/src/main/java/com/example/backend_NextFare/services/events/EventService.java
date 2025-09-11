@@ -55,6 +55,18 @@ public class EventService {
             throw new IllegalArgumentException("East longitude must be greater than west longitude");
         }
 
+        String cacheKey = createCacheKey(north, south, east, west);
+
+        List<Event> cachedEvents = (List<Event>) redisTemplate.opsForValue().get(cacheKey);
+
+        if (cachedEvents != null) {
+            log.info("Cache HIT for key: {} - returning {} events", cacheKey, cachedEvents.size());
+            return ResponseEntity.ok(cachedEvents);
+        }
+
+        log.info("Cache MISS for key: {} - querying database", cacheKey);
+
+
         // Basic sanity check for NYC area (rough bounds)
         if (!isInNYCBounds(north, south, east, west)) {
             log.warn("Bounds seem outside NYC area: north={}, south={}, east={}, west={}",
@@ -62,6 +74,13 @@ public class EventService {
         }
 
         List<Event> events = eventRepository.geoSearchActiveEvents(north, south, east, west, LocalDateTime.now());
+
+        try{
+            redisTemplate.opsForValue().set(cacheKey, events, CACHE_TTL);
+            log.info("Cached {} events for key: {} with TTL of {} minutes", events.size(), cacheKey, CACHE_TTL.toMinutes());
+        }catch (Exception e){
+            log.warn("Failed to cache events for key: {} - {}", cacheKey, e.getMessage());
+        }
 
         log.info("Found {} active events in bounds", events.size());
         return ResponseEntity.ok(events);
@@ -122,5 +141,15 @@ public class EventService {
         String roundedWest = String.format("%.4f", west);
 
         return CACHE_PREFIX + roundedNorth + ":" + roundedSouth + ":" + roundedEast + ":" + roundedWest;
+    }
+
+    public void clearEventCache() {
+        try {
+            String pattern = CACHE_PREFIX + "*";
+            redisTemplate.delete(redisTemplate.keys(pattern));
+            log.info("Cleared all event caches with pattern: {}", pattern);
+        } catch (Exception e) {
+            log.warn("Failed to clear event cache: {}", e.getMessage());
+        }
     }
 }
