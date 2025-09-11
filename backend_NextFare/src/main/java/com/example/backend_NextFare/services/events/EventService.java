@@ -3,9 +3,11 @@ package com.example.backend_NextFare.services.events;
 import com.example.backend_NextFare.model.entities.Event;
 import com.example.backend_NextFare.model.repositories.EventRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -14,9 +16,17 @@ import java.util.List;
 public class EventService {
 
     private final EventRepository eventRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    public EventService(EventRepository eventRepository) {
+    private static final String CACHE_PREFIX = "events:bounds:";
+    private static final Duration CACHE_TTL = Duration.ofMinutes(15);
+
+    public EventService(
+            EventRepository eventRepository,
+            RedisTemplate<String, Object> redisTemplate
+    ) {
         this.eventRepository = eventRepository;
+        this.redisTemplate = redisTemplate;
     }
 
     public ResponseEntity<List<Event>> getAllActiveEvents() {
