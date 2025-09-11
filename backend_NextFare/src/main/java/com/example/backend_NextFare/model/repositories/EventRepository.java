@@ -14,4 +14,19 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     @Query("SELECT e FROM Event e WHERE e.eventEndTime > :now ORDER BY e.eventEndTime ASC")
     List<Event> findActiveEvents(@Param("now") LocalDateTime now);
+
+    /**
+     * Find events within a geographical bounding box that are still active
+     * 4 lines across the north, south, east, and west boundaries create the boundary box of where to search for active events
+     */
+    @Query("SELECT e FROM Event e WHERE " +
+            "e.latitude BETWEEN :south AND :north AND " +
+            "e.longitude BETWEEN :west AND :east AND " +
+            "e.eventEndTime > :now " +
+            "ORDER BY e.eventEndTime ASC")
+    List<Event> geoSearchActiveEvents(@Param("north") double north,
+                                       @Param("south") double south,
+                                       @Param("east") double east,
+                                       @Param("west") double west,
+                                       @Param("now") LocalDateTime now);
 }
