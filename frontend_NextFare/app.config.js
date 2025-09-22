@@ -9,6 +9,7 @@ export default {
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
     newArchEnabled: true,
+    scheme: "nextfare",
     plugins: [
       [
         "expo-location",
@@ -27,7 +28,6 @@ export default {
     },
     ios: {
       bundleIdentifier: "com.nextfare.driver",
-
       supportsTablet: true,
       config: {
         googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS,
