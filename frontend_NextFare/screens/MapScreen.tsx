@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
+import EventInfo from "../components/EventInfo";
 
 interface LocationType {
   latitude: number;
@@ -32,8 +33,10 @@ const MapScreen: React.FC = () => {
   const [location, setLocation] = useState<LocationType | null>(null);
   const [loading, setLoading] = useState(true);
   const [eventMarkers, setEventMarkers] = useState<EventMarker[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<EventMarker | null>(null);
+  const [showEventInfo, setShowEventInfo] = useState(false);
 
-  //
+  // Default location (New York City)
   const defaultLocation: LocationType = {
     latitude: 40.7128,
     longitude: -74.006,
@@ -117,17 +120,13 @@ const MapScreen: React.FC = () => {
   };
 
   const onMarkerPress = (event: EventMarker) => {
-    Alert.alert(
-      event.title,
-      `${event.description}\nEnds at: ${event.endTime}`,
-      [
-        {
-          text: "Navigate",
-          onPress: () => console.log("Navigate to", event.title),
-        },
-        { text: "Close", style: "cancel" },
-      ]
-    );
+    setSelectedEvent(event);
+    setShowEventInfo(true);
+  };
+
+  const closeEventInfo = () => {
+    setShowEventInfo(false);
+    setSelectedEvent(null);
   };
 
   if (loading) {
@@ -147,13 +146,14 @@ const MapScreen: React.FC = () => {
         {location && (
           <MapView
             style={styles.map}
-            provider={PROVIDER_GOOGLE}
+            provider={undefined}
             initialRegion={location}
             showsUserLocation={true}
             showsMyLocationButton={false}
             followsUserLocation={false}
             showsCompass={true}
             showsScale={true}
+            showsTraffic={true}
           >
             {eventMarkers.map((event) => (
               <Marker
@@ -184,6 +184,13 @@ const MapScreen: React.FC = () => {
             {eventMarkers.length} Events Nearby
           </Text>
         </View>
+
+        {/* Event Info Modal */}
+        <EventInfo
+          visible={showEventInfo}
+          event={selectedEvent}
+          onClose={closeEventInfo}
+        />
       </View>
     </SafeAreaView>
   );
