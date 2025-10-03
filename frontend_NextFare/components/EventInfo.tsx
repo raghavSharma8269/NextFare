@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -32,7 +32,23 @@ interface EventInfoProps {
 }
 
 const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
+  const [showFullDescription, setShowFullDescription] = useState(false);
+
+  // Reset description state whenever the modal becomes visible or event changes
+  useEffect(() => {
+    if (visible) {
+      setShowFullDescription(false);
+    }
+  }, [visible, event?.id]);
+
   if (!event) return null;
+
+  const DESCRIPTION_LIMIT = 100;
+  const shouldTruncate = event.description.length > DESCRIPTION_LIMIT;
+  const displayDescription =
+    showFullDescription || !shouldTruncate
+      ? event.description
+      : `${event.description.substring(0, DESCRIPTION_LIMIT)}...`;
 
   const handleNavigate = () => {
     const { latitude, longitude, title } = event;
@@ -85,6 +101,7 @@ const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
   };
 
   const formatTime = (timeString: string) => {
+    if (!timeString) return "";
     const [hours, minutes] = timeString.split(":");
     const hour24 = parseInt(hours);
     const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
@@ -99,17 +116,21 @@ const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
       transparent={true}
       onRequestClose={onClose}
     >
-      <TouchableOpacity
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={onClose}
-      >
+      <View style={styles.modalOverlay}>
+        {/* Backdrop - tap to close */}
         <TouchableOpacity
-          style={styles.modalContent}
+          style={styles.backdrop}
           activeOpacity={1}
-          onPress={(e) => e.stopPropagation()}
-        >
-          <ScrollView showsVerticalScrollIndicator={false}>
+          onPress={onClose}
+        />
+
+        {/* Modal content - NOT touchable */}
+        <View style={styles.modalContent}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+            contentContainerStyle={styles.scrollContent}
+          >
             {/* Event Image */}
             {event.imageUrl && (
               <Image
@@ -132,28 +153,48 @@ const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
 
             {/* Event Details */}
             <View style={styles.content}>
+              {/* Description with Read More */}
               <View style={styles.detailRow}>
                 <Ionicons
                   name="information-circle-outline"
                   size={20}
                   color="#666"
                 />
-                <Text style={styles.detailText}>{event.description}</Text>
+                <View style={styles.descriptionContainer}>
+                  <Text style={styles.detailText}>{displayDescription}</Text>
+                  {shouldTruncate && (
+                    <TouchableOpacity
+                      onPress={() =>
+                        setShowFullDescription(!showFullDescription)
+                      }
+                      style={styles.readMoreButton}
+                    >
+                      <Text style={styles.readMoreText}>
+                        {showFullDescription ? "Show Less" : "Read More"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
 
-              <View style={styles.detailRow}>
-                <Ionicons name="time-outline" size={20} color="#666" />
-                <Text style={styles.detailText}>
-                  Ends at {formatTime(event.endTime)}
-                </Text>
-              </View>
+              {event.endTime && (
+                <View style={styles.detailRow}>
+                  <Ionicons name="time-outline" size={20} color="#666" />
+                  <Text style={styles.detailText}>
+                    Ends at {formatTime(event.endTime)}
+                  </Text>
+                </View>
+              )}
 
-              <View style={styles.detailRow}>
-                <Ionicons name="time-outline" size={20} color="#666" />
-                <Text style={styles.detailText}>
-                  Estimated Attendance: {event.estimatedAttendance}
-                </Text>
-              </View>
+              {event.estimatedAttendance && (
+                <View style={styles.detailRow}>
+                  <Ionicons name="people-outline" size={20} color="#666" />
+                  <Text style={styles.detailText}>
+                    Estimated Attendance:{" "}
+                    {event.estimatedAttendance.toLocaleString()}
+                  </Text>
+                </View>
+              )}
 
               {/* Coordinates */}
               <View style={styles.coordinatesContainer}>
@@ -188,8 +229,8 @@ const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
               </TouchableOpacity>
             </View>
           </ScrollView>
-        </TouchableOpacity>
-      </TouchableOpacity>
+        </View>
+      </View>
     </Modal>
   );
 };
@@ -197,17 +238,26 @@ const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "flex-end",
+  },
+  backdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
     backgroundColor: "#fff",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    maxHeight: "80%",
+  },
+  scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 34,
-    maxHeight: "80%",
   },
   eventImage: {
     width: "100%",
@@ -244,7 +294,7 @@ const styles = StyleSheet.create({
   },
   detailRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 15,
   },
   detailText: {
@@ -252,6 +302,18 @@ const styles = StyleSheet.create({
     color: "#333",
     marginLeft: 15,
     flex: 1,
+  },
+  descriptionContainer: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  readMoreButton: {
+    marginTop: 5,
+  },
+  readMoreText: {
+    color: "#2196F3",
+    fontSize: 14,
+    fontWeight: "600",
   },
   coordinatesContainer: {
     marginTop: 10,
