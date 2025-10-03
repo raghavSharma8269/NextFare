@@ -8,10 +8,12 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 import EventInfo from "../components/EventInfo";
+import { useEvents } from "../hooks/useEvent";
+import { Event } from "../services/EventApiService";
 
 interface LocationType {
   latitude: number;
@@ -20,6 +22,7 @@ interface LocationType {
   longitudeDelta: number;
 }
 
+// Convert backend Event to EventMarker format for the modal
 interface EventMarker {
   id: string;
   latitude: number;
@@ -27,16 +30,31 @@ interface EventMarker {
   title: string;
   description: string;
   endTime: string;
+  imageUrl?: string;
+  pageUrl?: string;
 }
 
 const MapScreen: React.FC = () => {
   const [location, setLocation] = useState<LocationType | null>(null);
   const [loading, setLoading] = useState(true);
-  const [eventMarkers, setEventMarkers] = useState<EventMarker[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<EventMarker | null>(null);
   const [showEventInfo, setShowEventInfo] = useState(false);
 
-  // Default location (New York City)
+  // Use the events hook with current location
+  const {
+    events,
+    loading: eventsLoading,
+    error: eventsError,
+    refreshEvents,
+  } = useEvents({
+    latitude: location?.latitude,
+    longitude: location?.longitude,
+    radiusMiles: 10.0,
+    autoRefresh: true,
+    refreshInterval: 300000, // Refresh every 5 minutes
+  });
+
+  // Default location
   const defaultLocation: LocationType = {
     latitude: 40.7128,
     longitude: -74.006,
@@ -44,37 +62,8 @@ const MapScreen: React.FC = () => {
     longitudeDelta: 0.0421,
   };
 
-  // Sample event data
-  const sampleEvents: EventMarker[] = [
-    {
-      id: "1",
-      latitude: 40.7589,
-      longitude: -73.9851,
-      title: "Concert at Central Park",
-      description: "Large concert ending at 11 PM",
-      endTime: "23:00",
-    },
-    {
-      id: "2",
-      latitude: 40.7505,
-      longitude: -73.9934,
-      title: "Broadway Show",
-      description: "Theater show ending at 10:30 PM",
-      endTime: "22:30",
-    },
-    {
-      id: "3",
-      latitude: 40.7282,
-      longitude: -74.0776,
-      title: "Sports Game",
-      description: "Basketball game ending at midnight",
-      endTime: "00:00",
-    },
-  ];
-
   useEffect(() => {
     getLocation();
-    setEventMarkers(sampleEvents);
   }, []);
 
   const getLocation = async () => {
@@ -119,14 +108,34 @@ const MapScreen: React.FC = () => {
     getLocation();
   };
 
-  const onMarkerPress = (event: EventMarker) => {
-    setSelectedEvent(event);
+  // Convert backend Event to EventMarker
+  const convertToEventMarker = (event: Event): EventMarker => ({
+    id: event.id.toString(),
+    latitude: event.latitude,
+    longitude: event.longitude,
+    title: event.eventTitle,
+    description: event.eventSummary,
+    endTime: new Date(event.eventEndTime).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    imageUrl: event.eventImageUrl, // Add this
+    pageUrl: event.eventPageUrl, // Add this
+  });
+
+  const onMarkerPress = (event: Event) => {
+    const eventMarker = convertToEventMarker(event);
+    setSelectedEvent(eventMarker);
     setShowEventInfo(true);
   };
 
   const closeEventInfo = () => {
     setShowEventInfo(false);
     setSelectedEvent(null);
+  };
+
+  const handleRefresh = () => {
+    refreshEvents();
   };
 
   if (loading) {
@@ -151,19 +160,23 @@ const MapScreen: React.FC = () => {
             showsUserLocation={true}
             showsMyLocationButton={false}
             followsUserLocation={false}
-            showsCompass={true}
-            showsScale={true}
-            showsTraffic={true}
+            showsCompass={false}
+            showsScale={false}
+            showsTraffic={false}
+            showsIndoors={false}
+            showsBuildings={false}
+            pitchEnabled={false}
+            mapType="standard"
           >
-            {eventMarkers.map((event) => (
+            {events.map((event) => (
               <Marker
                 key={event.id}
                 coordinate={{
                   latitude: event.latitude,
                   longitude: event.longitude,
                 }}
-                title={event.title}
-                description={event.description}
+                title={event.eventTitle}
+                description={event.eventSummary}
                 onPress={() => onMarkerPress(event)}
                 pinColor="#FF6B6B"
               />
@@ -173,6 +186,18 @@ const MapScreen: React.FC = () => {
 
         {/* Floating Action Buttons */}
         <View style={styles.fabContainer}>
+          <TouchableOpacity
+            style={[styles.fab, styles.refreshFab]}
+            onPress={handleRefresh}
+            disabled={eventsLoading}
+          >
+            {eventsLoading ? (
+              <ActivityIndicator size={20} color="#fff" />
+            ) : (
+              <Ionicons name="refresh" size={24} color="#fff" />
+            )}
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.fab} onPress={centerOnUser}>
             <Ionicons name="locate" size={24} color="#fff" />
           </TouchableOpacity>
@@ -181,8 +206,9 @@ const MapScreen: React.FC = () => {
         {/* Event Counter */}
         <View style={styles.eventCounter}>
           <Text style={styles.eventCountText}>
-            {eventMarkers.length} Events Nearby
+            {eventsLoading ? "Loading..." : `${events.length} events nearby`}
           </Text>
+          {eventsError && <Text style={styles.errorText}>{eventsError}</Text>}
         </View>
 
         {/* Event Info Modal */}
@@ -221,6 +247,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 100,
     right: 20,
+    gap: 12,
   },
   fab: {
     width: 56,
@@ -238,6 +265,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  refreshFab: {
+    backgroundColor: "#4CAF50",
+  },
   eventCounter: {
     position: "absolute",
     top: 20,
@@ -253,6 +283,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#333",
+  },
+  errorText: {
+    fontSize: 12,
+    color: "#f44336",
+    marginTop: 4,
   },
 });
 
