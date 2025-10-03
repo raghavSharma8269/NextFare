@@ -22,6 +22,7 @@ interface EventMarker {
   endTime: string;
   imageUrl?: string;
   pageUrl?: string;
+  estimatedAttendance?: number;
 }
 
 interface EventInfoProps {
@@ -144,6 +145,13 @@ const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
                 <Ionicons name="time-outline" size={20} color="#666" />
                 <Text style={styles.detailText}>
                   Ends at {formatTime(event.endTime)}
+                </Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Ionicons name="time-outline" size={20} color="#666" />
+                <Text style={styles.detailText}>
+                  Estimated Attendance: {event.estimatedAttendance}
                 </Text>
               </View>
 

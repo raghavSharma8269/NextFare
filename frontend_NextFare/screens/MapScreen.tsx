@@ -32,6 +32,7 @@ interface EventMarker {
   endTime: string;
   imageUrl?: string;
   pageUrl?: string;
+  estimatedAttendance?: number;
 }
 
 const MapScreen: React.FC = () => {
@@ -119,8 +120,9 @@ const MapScreen: React.FC = () => {
       hour: "2-digit",
       minute: "2-digit",
     }),
-    imageUrl: event.eventImageUrl, // Add this
-    pageUrl: event.eventPageUrl, // Add this
+    imageUrl: event.eventImageUrl,
+    pageUrl: event.eventPageUrl,
+    estimatedAttendance: event.ticketsSold,
   });
 
   const onMarkerPress = (event: Event) => {
