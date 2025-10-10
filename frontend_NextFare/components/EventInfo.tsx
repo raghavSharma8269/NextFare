@@ -102,11 +102,31 @@ const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
 
   const formatTime = (timeString: string) => {
     if (!timeString) return "";
-    const [hours, minutes] = timeString.split(":");
-    const hour24 = parseInt(hours);
-    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
-    const ampm = hour24 >= 12 ? "PM" : "AM";
-    return `${hour12}:${minutes} ${ampm}`;
+
+    // if  already contains AM/PM, just return
+    if (timeString.includes("AM") || timeString.includes("PM")) {
+      return timeString;
+    }
+
+    const date = new Date(timeString);
+
+    if (isNaN(date.getTime())) {
+      const timeParts = timeString.split(":");
+      if (timeParts.length < 2) return "";
+
+      const hours = parseInt(timeParts[0]);
+      const minutes = timeParts[1];
+      const hour12 = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+      const ampm = hours >= 12 ? "PM" : "AM";
+      return `${hour12}:${minutes} ${ampm}`;
+    }
+
+    // Format using toLocaleTimeString for proper timezone handling
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   return (
