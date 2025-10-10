@@ -202,8 +202,6 @@ const MapScreen: React.FC = () => {
                 latitude: DEFAULT_MARKER.latitude,
                 longitude: DEFAULT_MARKER.longitude,
               }}
-              title={DEFAULT_MARKER.title}
-              description={DEFAULT_MARKER.description}
               onPress={onDefaultMarkerPress}
               pinColor={DEFAULT_MARKER.pinColor}
             />
@@ -216,8 +214,6 @@ const MapScreen: React.FC = () => {
                   latitude: event.latitude,
                   longitude: event.longitude,
                 }}
-                title={event.eventTitle}
-                description={event.eventSummary}
                 onPress={() => onMarkerPress(event)}
                 pinColor="#FF6B6B"
               />
