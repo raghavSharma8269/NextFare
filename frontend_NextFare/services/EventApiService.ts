@@ -51,7 +51,7 @@ export class EventsApiService {
   }
 
   /**
-   * Get events within radius of a point (most useful for mobile app)
+   * Get events within radius of a point
    */
   static async getEventsWithinRadius(
     latitude: number,
@@ -62,7 +62,7 @@ export class EventsApiService {
       params: {
         lat: latitude,
         lng: longitude,
-        radiusInMiles: radiusMiles,
+        radiusInMiles: radiusMiles, //default 2 miles
       },
     });
     return response.data;
