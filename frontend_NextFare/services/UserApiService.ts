@@ -22,6 +22,11 @@ class UserApiService {
       if (error.response?.status === 400) {
         throw new Error(error.response.data.message || "Invalid profile data");
       }
+      if (error.response?.status === 409) {
+        throw new Error(
+          "This username is already taken. Please choose another."
+        );
+      }
       throw new Error("Failed to create user profile");
     }
   }
