@@ -76,7 +76,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     // Validate inputs
     const validationError = validateInputs();
     if (validationError) {
-      Alert.alert("Validation Error", validationError);
+      Alert.alert("Invalid Registration", validationError);
       return;
     }
 
