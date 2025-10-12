@@ -1,4 +1,6 @@
 import React from "react";
+import { tokenStorage } from "../utils/tokenStorage";
+import { Button } from "react-native";
 import {
   View,
   Text,
@@ -121,6 +123,19 @@ const SettingsScreen: React.FC = () => {
             title="Privacy Policy"
             onPress={() => console.log("Privacy pressed")}
           />
+        </View>
+        <View style={styles.footer}>
+          {/* TEMP LOGIN BUTTON */}
+          <Button
+            title="DEBUG: Logout"
+            onPress={async () => {
+              await tokenStorage.clearTokens();
+            }}
+          />
+        </View>
+
+        <View>
+          <Text>HAVE TO RELOAD AFTER</Text>
         </View>
 
         <View style={styles.footer}>
