@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import com.google.cloud.firestore.DocumentReference;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,10 +22,9 @@ import java.util.Map;
 public class UserService {
 
     public ResponseEntity<UserDTO> createOrUpdateUser(UserDTO userDTO, Authentication auth) {
-
         log.info("Executing UserService.createOrUpdateUser \n{}", userDTO.toString());
 
-        try{
+        try {
             FirebaseAuthToken firebaseAuth = (FirebaseAuthToken) auth;
             String uid = firebaseAuth.getUid();
             String email = firebaseAuth.getEmail();
@@ -42,7 +43,20 @@ public class UserService {
                     return ResponseEntity.badRequest().body(null);
                 }
 
-                //Create new profile in firestore
+                // make all usernames case insensitive by storing them in lowercase
+                String normalizedUsername = userDTO.getUsername().trim().toLowerCase();
+
+                DocumentReference usernameDoc = db.collection("usernames")
+                        .document(normalizedUsername);
+
+                DocumentSnapshot usernameSnapshot = usernameDoc.get().get();
+
+                if (usernameSnapshot.exists()) {
+                    log.error("Username already taken: {}", userDTO.getUsername());
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+                }
+
+                // Create new profile in firestore
                 UserDTO newProfile = new UserDTO();
                 newProfile.setUid(uid);
                 newProfile.setEmail(email);
@@ -51,57 +65,71 @@ public class UserService {
                 newProfile.setCreatedAt(Timestamp.now());
                 newProfile.setUpdatedAt(Timestamp.now());
 
+                // Save user profile
                 db.collection("users").document(uid).set(newProfile).get();
+
+                // Reserve username in index collection
+                Map<String, Object> usernameData = new HashMap<>();
+                usernameData.put("uid", uid);
+                usernameData.put("createdAt", Timestamp.now());
+                usernameDoc.set(usernameData).get();
 
                 log.info("User created successfully with uid: {}", uid);
                 return ResponseEntity.ok(newProfile);
             }
 
-            /**
-             * For existing users we update only the fields that are provided in the request
-             */
+            // *** EXISTING USER UPDATE LOGIC ***
+            log.info("Updating existing user with uid: {}", uid);
 
-            else {
-                log.info("Updating existing user in firestore with uid: {}", uid);
+            UserDTO updatedProfile = existingProfile.toObject(UserDTO.class);
 
-                Map<String, Object> updates = new HashMap<>();
-                boolean hasUpdates = false;
+            // Update username if provided and different
+            if (userDTO.getUsername() != null && !userDTO.getUsername().trim().isEmpty()) {
+                String newNormalizedUsername = userDTO.getUsername().trim().toLowerCase();
+                String currentNormalizedUsername = updatedProfile.getUsername().toLowerCase();
 
-                // Update location if provided
-                if (userDTO.getLastLocation() != null) {
-                    updates.put("lastLocation", userDTO.getLastLocation());
-                    hasUpdates = true;
-                    log.info("Updating location for user: {}", uid);
-                }
+                // Only check uniqueness if username is changing
+                if (!newNormalizedUsername.equals(currentNormalizedUsername)) {
+                    DocumentReference newUsernameDoc = db.collection("usernames")
+                            .document(newNormalizedUsername);
 
-                // Update username if provided and different
-                if (userDTO.getUsername() != null && !userDTO.getUsername().trim().isEmpty()) {
-                    UserDTO existingData = existingProfile.toObject(UserDTO.class);
-                    if (!userDTO.getUsername().trim().equals(existingData.getUsername())) {
-                        updates.put("username", userDTO.getUsername().trim());
-                        hasUpdates = true;
-                        log.info("Updating username for user: {}", uid);
+                    DocumentSnapshot newUsernameSnapshot = newUsernameDoc.get().get();
+
+                    if (newUsernameSnapshot.exists()) {
+                        log.error("Username already taken: {}", userDTO.getUsername());
+                        return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
                     }
+
+                    // Remove old username reservation
+                    db.collection("usernames").document(currentNormalizedUsername).delete().get();
+
+                    // Reserve new username
+                    Map<String, Object> usernameData = new HashMap<>();
+                    usernameData.put("uid", uid);
+                    usernameData.put("createdAt", Timestamp.now());
+                    newUsernameDoc.set(usernameData).get();
+
+                    // Update username in profile
+                    updatedProfile.setUsername(userDTO.getUsername().trim());
                 }
-
-                if (hasUpdates) {
-                    // Always update the timestamp when making changes
-                    updates.put("updatedAt", Timestamp.now());
-
-                    db.collection("users").document(uid).update(updates).get();
-                    log.info("User updated successfully with uid: {}", uid);
-                } else {
-                    log.info("No updates needed for user: {}", uid);
-                }
-
-                DocumentSnapshot updatedProfile = db.collection("users").document(uid).get().get();
-                UserDTO updatedUser = updatedProfile.toObject(UserDTO.class);
-                return ResponseEntity.ok(updatedUser);
             }
 
-        }catch (Exception e) {
-            log.error("Error in createOrUpdateUser: {}", e.getMessage());
-            return ResponseEntity.status(500).body(null);
+            // Update location if provided
+            if (userDTO.getLastLocation() != null) {
+                updatedProfile.setLastLocation(userDTO.getLastLocation());
+            }
+
+            updatedProfile.setUpdatedAt(Timestamp.now());
+
+            // Save updated profile
+            db.collection("users").document(uid).set(updatedProfile).get();
+
+            log.info("User updated successfully with uid: {}", uid);
+            return ResponseEntity.ok(updatedProfile);
+
+        } catch (Exception e) {
+            log.error("Error in createOrUpdateUser", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
