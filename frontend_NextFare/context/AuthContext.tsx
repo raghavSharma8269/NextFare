@@ -144,7 +144,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         profileData
       );
       setUser(userProfile);
-    } catch (error) {
+    } catch (error: any) {
+      // If username was taken, clean up the Firebase account
+      if (error.message?.includes("username is already taken")) {
+        await tokenStorage.clearTokens();
+        // The Firebase account remains, but user can't proceed without unique username
+      }
       console.error("Registration failed:", error);
       throw error;
     }
