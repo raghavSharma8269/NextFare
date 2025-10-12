@@ -1,69 +1,124 @@
 import React from "react";
+import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
-import MapScreen from "./screens/MapScreen";
-import SettingsScreen from "./screens/SettingsScreen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-const Tab = createBottomTabNavigator();
+import MapScreen from "./screens/MapScreen";
+import SettingsScreen from "./screens/SettingsScreen";
+import LoginScreen from "./screens/LoginScreen";
+import RegisterScreen from "./screens/RegisterScreen";
 
+import { AuthProvider } from "./context/AuthContext";
+import { useAuth } from "./hooks/useAuth";
+
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+// (Login/Register)
+function AuthStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// (Maps/Settings)
+function MainTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap;
+
+          if (route.name === "Map") {
+            iconName = focused ? "map" : "map-outline";
+          } else if (route.name === "Settings") {
+            iconName = focused ? "settings" : "settings-outline";
+          } else {
+            iconName = "help-outline";
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: "#8ca5baff",
+        tabBarInactiveTintColor: "gray",
+        tabBarStyle: {
+          backgroundColor: "#fff",
+          borderTopWidth: 1,
+          borderTopColor: "#e0e0e0",
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        headerStyle: {
+          backgroundColor: "#8ca5baff",
+        },
+        headerTintColor: "#fff",
+        headerTitleStyle: {
+          fontWeight: "bold",
+        },
+      })}
+    >
+      <Tab.Screen
+        name="Map"
+        component={MapScreen}
+        options={{
+          title: "NextFare",
+          headerTitle: "NextFare",
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          title: "Settings",
+          headerTitle: "Settings",
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+// Navigation Logic based on Auth State
+function AppNavigator() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#8ca5baff" />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      {isAuthenticated ? <MainTabs /> : <AuthStack />}
+    </NavigationContainer>
+  );
+}
+
+// Root App Component
 export default function App() {
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
-              let iconName: keyof typeof Ionicons.glyphMap;
-
-              if (route.name === "Map") {
-                iconName = focused ? "map" : "map-outline";
-              } else if (route.name === "Settings") {
-                iconName = focused ? "settings" : "settings-outline";
-              } else {
-                iconName = "help-outline";
-              }
-
-              return <Ionicons name={iconName} size={size} color={color} />;
-            },
-            tabBarActiveTintColor: "#8ca5baff",
-            tabBarInactiveTintColor: "gray",
-            tabBarStyle: {
-              backgroundColor: "#fff",
-              borderTopWidth: 1,
-              borderTopColor: "#e0e0e0",
-              height: 60,
-              paddingBottom: 8,
-              paddingTop: 8,
-            },
-            headerStyle: {
-              backgroundColor: "#8ca5baff",
-            },
-            headerTintColor: "#fff",
-            headerTitleStyle: {
-              fontWeight: "bold",
-            },
-          })}
-        >
-          <Tab.Screen
-            name="Map"
-            component={MapScreen}
-            options={{
-              title: "NextFare",
-              headerTitle: "NextFare",
-            }}
-          />
-          <Tab.Screen
-            name="Settings"
-            component={SettingsScreen}
-            options={{
-              title: "Settings",
-              headerTitle: "Settings",
-            }}
-          />
-        </Tab.Navigator>
-      </NavigationContainer>
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+  },
+});
