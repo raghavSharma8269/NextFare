@@ -68,7 +68,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>NextFare</Text>
-            <Text style={styles.subtitle}>Welcome back, driver</Text>
+            <Text style={styles.subtitle}>Login</Text>
           </View>
 
           {/* Login Form */}
