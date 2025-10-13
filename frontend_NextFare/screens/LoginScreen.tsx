@@ -12,6 +12,8 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import MaskedView from "@react-native-masked-view/masked-view";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../hooks/useAuth";
 import { AuthError } from "../types/auth";
@@ -29,7 +31,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { login } = useAuth();
 
   const handleLogin = async () => {
-    // Validation
     if (!email.trim() || !password.trim()) {
       Alert.alert("Error", "Please enter both email and password");
       return;
@@ -39,7 +40,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
     try {
       await login({ email: email.trim(), password });
-      // Navigation happens automatically via AuthContext
     } catch (error) {
       const authError = error as AuthError;
       Alert.alert(
@@ -56,107 +56,165 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
+    <LinearGradient
+      colors={["#0f0f15", "#1a1a24", "#1e1e2e"]}
+      style={styles.gradient}
+    >
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardView}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>NextFare</Text>
-            <Text style={styles.subtitle}>Login</Text>
-          </View>
-
-          {/* Login Form */}
-          <View style={styles.form}>
-            {/* Email Input */}
-            <View style={styles.inputContainer}>
-              <Ionicons
-                name="mail-outline"
-                size={20}
-                color="#666"
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                autoComplete="email"
-                editable={!isLoading}
-              />
-            </View>
-
-            {/* Password Input */}
-            <View style={styles.inputContainer}>
-              <Ionicons
-                name="lock-closed-outline"
-                size={20}
-                color="#666"
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                autoComplete="password"
-                editable={!isLoading}
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeIcon}
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Header with Gradient Text */}
+            <View style={styles.header}>
+              <MaskedView
+                maskElement={<Text style={styles.titleMask}>NextFare</Text>}
               >
-                <Ionicons
-                  name={showPassword ? "eye-outline" : "eye-off-outline"}
-                  size={20}
-                  color="#666"
-                />
-              </TouchableOpacity>
+                <LinearGradient
+                  colors={["#a0d2eb", "#d0bdf4", "#8458B3"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Text style={styles.title}>NextFare</Text>
+                </LinearGradient>
+              </MaskedView>
+              <Text style={styles.subtitle}>
+                Find Where Your Next Fare is Waiting
+              </Text>
             </View>
 
-            {/* Login Button */}
-            <TouchableOpacity
-              style={[
-                styles.loginButton,
-                isLoading && styles.loginButtonDisabled,
-              ]}
-              onPress={handleLogin}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.loginButtonText}>Login</Text>
-              )}
-            </TouchableOpacity>
-
-            {/* Register Link */}
-            <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={goToRegister} disabled={isLoading}>
-                <Text style={styles.registerLink}>Sign up</Text>
-              </TouchableOpacity>
+            {/* Decorative Glow */}
+            <View style={styles.glowContainer}>
+              <LinearGradient
+                colors={["rgba(160, 210, 235, 0.1)", "transparent"]}
+                style={styles.glow}
+              />
             </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+
+            {/* Login Form */}
+            <View style={styles.form}>
+              {/* Email Input */}
+              <View style={styles.inputWrapper}>
+                <View style={styles.inputContainer}>
+                  <Ionicons
+                    name="mail-outline"
+                    size={20}
+                    color="#a0d2eb"
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    placeholderTextColor="#6b7280"
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    autoComplete="email"
+                    editable={!isLoading}
+                  />
+                </View>
+              </View>
+
+              {/* Password Input */}
+              <View style={styles.inputWrapper}>
+                <View style={styles.inputContainer}>
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={20}
+                    color="#a0d2eb"
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    placeholderTextColor="#6b7280"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoComplete="password"
+                    editable={!isLoading}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeIcon}
+                  >
+                    <Ionicons
+                      name={showPassword ? "eye-outline" : "eye-off-outline"}
+                      size={20}
+                      color="#a0d2eb"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Login Button */}
+              <TouchableOpacity
+                onPress={handleLogin}
+                disabled={isLoading}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={["#a0d2eb", "#8458B3"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[
+                    styles.loginButton,
+                    isLoading && styles.loginButtonDisabled,
+                  ]}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <>
+                      <Text style={styles.loginButtonText}>Sign In</Text>
+                      <Ionicons name="arrow-forward" size={20} color="#fff" />
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+
+              {/* Register Link */}
+              <View style={styles.registerContainer}>
+                <Text style={styles.registerText}>Don't have an account? </Text>
+                <TouchableOpacity onPress={goToRegister} disabled={isLoading}>
+                  <Text style={styles.registerLink}>Create Account</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Bottom Accent */}
+            <View style={styles.bottomAccent}>
+              <LinearGradient
+                colors={[
+                  "transparent",
+                  "rgba(132, 88, 179, 0.2)",
+                  "transparent",
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.accentLine}
+              />
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
   },
   keyboardView: {
     flex: 1,
@@ -164,35 +222,62 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
-    padding: 20,
+    padding: 24,
   },
   header: {
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 50,
+  },
+  titleMask: {
+    fontSize: 48,
+    fontWeight: "bold",
+    fontFamily: "Sansation-Bold",
+    textAlign: "center",
   },
   title: {
-    fontSize: 36,
+    fontSize: 48,
     fontWeight: "bold",
-    color: "#8ca5baff",
-    marginBottom: 8,
+    fontFamily: "Sansation-Bold",
+    color: "transparent",
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
+    fontFamily: "Sansation-Regular",
+    color: "#e5eaf5",
+    textAlign: "center",
+    marginTop: 12,
+    lineHeight: 24,
+    paddingHorizontal: 20,
+  },
+  glowContainer: {
+    position: "absolute",
+    top: 100,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  glow: {
+    width: 300,
+    height: 300,
+    borderRadius: 150,
   },
   form: {
     width: "100%",
+    zIndex: 10,
+  },
+  inputWrapper: {
+    marginBottom: 20,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    marginBottom: 16,
+    backgroundColor: "rgba(30, 30, 46, 0.8)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(160, 210, 235, 0.2)",
     paddingHorizontal: 16,
     height: 56,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
   },
   inputIcon: {
     marginRight: 12,
@@ -200,19 +285,27 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: "#333",
+    color: "#f8f9fa",
   },
   eyeIcon: {
     padding: 4,
   },
   loginButton: {
-    backgroundColor: "#8ca5baff",
-    borderRadius: 10,
     height: 56,
+    borderRadius: 12,
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     marginTop: 8,
-    marginBottom: 20,
+    marginBottom: 24,
+    shadowColor: "#8458B3",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   loginButtonDisabled: {
     opacity: 0.6,
@@ -221,6 +314,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "600",
+    marginRight: 8,
   },
   registerContainer: {
     flexDirection: "row",
@@ -229,12 +323,19 @@ const styles = StyleSheet.create({
   },
   registerText: {
     fontSize: 14,
-    color: "#666",
+    color: "#e5eaf5",
   },
   registerLink: {
     fontSize: 14,
-    color: "#8ca5baff",
+    color: "#a0d2eb",
     fontWeight: "600",
+  },
+  bottomAccent: {
+    marginTop: 40,
+  },
+  accentLine: {
+    height: 2,
+    width: "100%",
   },
 });
 
