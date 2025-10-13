@@ -8,6 +8,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import MapScreen from "./screens/MapScreen";
 import SettingsScreen from "./screens/SettingsScreen";
+import ProfileScreen from "./screens/ProfileScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 
@@ -27,7 +28,7 @@ function AuthStack() {
   );
 }
 
-// (Maps/Settings)
+// (Map/Settings)
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -74,17 +75,44 @@ function MainTabs() {
       />
       <Tab.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={SettingsStack}
         options={{
           title: "Settings",
           headerTitle: "Settings",
+          headerShown: false,
         }}
       />
     </Tab.Navigator>
   );
 }
 
-// Navigation Logic based on Auth State
+function SettingsStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="SettingsMain"
+        component={SettingsScreen}
+        options={{
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: "#8ca5baff",
+          },
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "bold",
+          },
+          title: "Settings",
+        }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
+  );
+}
+
 function AppNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -103,7 +131,6 @@ function AppNavigator() {
   );
 }
 
-// Root App Component
 export default function App() {
   return (
     <SafeAreaProvider>
