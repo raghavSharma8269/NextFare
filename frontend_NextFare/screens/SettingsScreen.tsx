@@ -1,6 +1,4 @@
 import React from "react";
-import { tokenStorage } from "../utils/tokenStorage";
-import { Button } from "react-native";
 import {
   View,
   Text,
@@ -12,7 +10,11 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const SettingsScreen: React.FC = () => {
+interface SettingsScreenProps {
+  navigation: any;
+}
+
+const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [locationEnabled, setLocationEnabled] = React.useState(true);
 
@@ -82,7 +84,7 @@ const SettingsScreen: React.FC = () => {
             icon="person-outline"
             title="Profile"
             subtitle="View and edit your profile"
-            onPress={() => console.log("Profile pressed")}
+            onPress={() => navigation.navigate("Profile")}
           />
         </View>
 
@@ -123,19 +125,6 @@ const SettingsScreen: React.FC = () => {
             title="Privacy Policy"
             onPress={() => console.log("Privacy pressed")}
           />
-        </View>
-        <View style={styles.footer}>
-          {/* TEMP LOGIN BUTTON */}
-          <Button
-            title="DEBUG: Logout"
-            onPress={async () => {
-              await tokenStorage.clearTokens();
-            }}
-          />
-        </View>
-
-        <View>
-          <Text>HAVE TO RELOAD AFTER</Text>
         </View>
 
         <View style={styles.footer}>
