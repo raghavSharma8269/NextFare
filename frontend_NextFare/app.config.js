@@ -12,6 +12,15 @@ export default {
     scheme: "nextfare",
     plugins: [
       [
+        "expo-font",
+        {
+          fonts: [
+            "./assets/fonts/Sansation-Regular.ttf",
+            "./assets/fonts/Sansation-Bold.ttf",
+          ],
+        },
+      ],
+      [
         "expo-location",
         {
           locationAlwaysAndWhenInUsePermission:
