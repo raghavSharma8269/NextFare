@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 
 import MapScreen from "./screens/MapScreen";
 import SettingsScreen from "./screens/SettingsScreen";
@@ -18,7 +19,7 @@ import { useAuth } from "./hooks/useAuth";
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// (Login/Register)
+// Auth Stack (Login/Register)
 function AuthStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -28,7 +29,7 @@ function AuthStack() {
   );
 }
 
-// (Map/Settings)
+// Main App Tabs (Map/Settings)
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -86,6 +87,7 @@ function MainTabs() {
   );
 }
 
+// Settings Stack with Profile screen
 function SettingsStack() {
   return (
     <Stack.Navigator>
@@ -113,6 +115,7 @@ function SettingsStack() {
   );
 }
 
+// Navigation Logic based on Auth State
 function AppNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -131,9 +134,11 @@ function AppNavigator() {
   );
 }
 
+// Root App Component
 export default function App() {
   return (
     <SafeAreaProvider>
+      <StatusBar style="light" />
       <AuthProvider>
         <AppNavigator />
       </AuthProvider>
