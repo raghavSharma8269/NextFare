@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import MaskedView from "@react-native-masked-view/masked-view";
 
 interface EventMarker {
   id: string;
@@ -164,7 +165,19 @@ const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
             {/* Header */}
             <View style={styles.header}>
               <View style={styles.headerContent}>
-                <Ionicons name="location" size={24} color="#8458B3" />
+                <MaskedView
+                  maskElement={
+                    <Ionicons name="location" size={24} color="black" />
+                  }
+                >
+                  <LinearGradient
+                    colors={["#a0d2eb", "#8458B3"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Ionicons name="location" size={24} color="transparent" />
+                  </LinearGradient>
+                </MaskedView>
                 <Text style={styles.title}>{event.title}</Text>
               </View>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -389,7 +402,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     width: "100%",
-    backgroundColor: "#eb0505ff",
+    backgroundColor: "#ed4242ff",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 15,
