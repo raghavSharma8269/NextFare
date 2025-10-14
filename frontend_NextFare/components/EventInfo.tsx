@@ -12,6 +12,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface EventMarker {
   id: string;
@@ -144,7 +145,7 @@ const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
           onPress={onClose}
         />
 
-        {/* Modal content - NOT touchable */}
+        {/* Modal content */}
         <View style={styles.modalContent}>
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -163,7 +164,7 @@ const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
             {/* Header */}
             <View style={styles.header}>
               <View style={styles.headerContent}>
-                <Ionicons name="location" size={24} color="#2196F3" />
+                <Ionicons name="location" size={24} color="#8458B3" />
                 <Text style={styles.title}>{event.title}</Text>
               </View>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -178,7 +179,7 @@ const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
                 <Ionicons
                   name="information-circle-outline"
                   size={20}
-                  color="#666"
+                  color="#ffffff"
                 />
                 <View style={styles.descriptionContainer}>
                   <Text style={styles.detailText}>{displayDescription}</Text>
@@ -199,7 +200,7 @@ const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
 
               {event.endTime && (
                 <View style={styles.detailRow}>
-                  <Ionicons name="time-outline" size={20} color="#666" />
+                  <Ionicons name="time-outline" size={20} color="#ffffff" />
                   <Text style={styles.detailText}>
                     Ends at {formatTime(event.endTime)}
                   </Text>
@@ -208,7 +209,7 @@ const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
 
               {event.estimatedAttendance && (
                 <View style={styles.detailRow}>
-                  <Ionicons name="people-outline" size={20} color="#666" />
+                  <Ionicons name="people-outline" size={20} color="#ffffff" />
                   <Text style={styles.detailText}>
                     Estimated Attendance:{" "}
                     {event.estimatedAttendance.toLocaleString()}
@@ -216,23 +217,24 @@ const EventInfo: React.FC<EventInfoProps> = ({ visible, event, onClose }) => {
                 </View>
               )}
 
-              {/* Coordinates */}
-              <View style={styles.coordinatesContainer}>
-                <Text style={styles.coordinatesText}>
-                  {event.latitude.toFixed(4)}, {event.longitude.toFixed(4)}
-                </Text>
-              </View>
+              {/* Line*/}
+              <View style={styles.header}></View>
             </View>
 
             {/* Action Buttons */}
             <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.navigateButton}
-                onPress={handleNavigate}
+              <LinearGradient
+                colors={["#a0d2eb", "#8458B3"]}
+                style={styles.gradientButton}
               >
-                <Ionicons name="navigate" size={20} color="#fff" />
-                <Text style={styles.navigateButtonText}>Navigate</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.navigateButton}
+                  onPress={handleNavigate}
+                >
+                  <Ionicons name="navigate" size={20} color="#fff" />
+                  <Text style={styles.navigateButtonText}>Navigate</Text>
+                </TouchableOpacity>
+              </LinearGradient>
 
               {event.pageUrl && (
                 <TouchableOpacity
@@ -269,7 +271,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(30, 30, 46, 0.8)",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: "80%",
@@ -302,7 +304,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
+    color: "#ffffff",
     marginLeft: 10,
     flex: 1,
   },
@@ -319,7 +321,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 16,
-    color: "#333",
+    color: "#ffffff",
     marginLeft: 15,
     flex: 1,
   },
@@ -351,15 +353,17 @@ const styles = StyleSheet.create({
     gap: 10,
     flexWrap: "wrap",
   },
-  navigateButton: {
+  gradientButton: {
     flex: 1,
     minWidth: "45%",
-    backgroundColor: "#2196F3",
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  navigateButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 15,
-    borderRadius: 10,
     gap: 8,
   },
   navigateButtonText: {
@@ -370,7 +374,7 @@ const styles = StyleSheet.create({
   linkButton: {
     flex: 1,
     minWidth: "45%",
-    backgroundColor: "#FF6B6B",
+    backgroundColor: "#8458B3",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -385,7 +389,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     width: "100%",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#eb0505ff",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 15,
@@ -393,7 +397,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   cancelButtonText: {
-    color: "#666",
+    color: "#ffffff",
     fontSize: 16,
     fontWeight: "500",
   },
