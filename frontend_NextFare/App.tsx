@@ -47,22 +47,27 @@ function MainTabs() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: "#8ca5baff",
-        tabBarInactiveTintColor: "gray",
+        tabBarActiveTintColor: "#a0d2eb",
+        tabBarInactiveTintColor: "#6b7280",
         tabBarStyle: {
-          backgroundColor: "#fff",
+          backgroundColor: "#1a1a24",
           borderTopWidth: 1,
-          borderTopColor: "#e0e0e0",
+          borderTopColor: "rgba(160, 210, 235, 0.2)",
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
         },
-        headerStyle: {
-          backgroundColor: "#8ca5baff",
+        tabBarLabelStyle: {
+          fontFamily: "Sansation-Bold",
+          fontSize: 12,
         },
-        headerTintColor: "#fff",
+        headerStyle: {
+          backgroundColor: "#1a1a24",
+        },
+        headerTintColor: "#f8f9fa",
         headerTitleStyle: {
           fontWeight: "bold",
+          fontFamily: "Sansation-Bold",
         },
       })}
     >
@@ -97,11 +102,12 @@ function SettingsStack() {
         options={{
           headerShown: true,
           headerStyle: {
-            backgroundColor: "#8ca5baff",
+            backgroundColor: "#1a1a24",
           },
-          headerTintColor: "#fff",
+          headerTintColor: "#f8f9fa",
           headerTitleStyle: {
             fontWeight: "bold",
+            fontFamily: "Sansation-Bold",
           },
           title: "Settings",
         }}
