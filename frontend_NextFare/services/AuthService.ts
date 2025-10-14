@@ -8,7 +8,7 @@ import {
   AuthError,
 } from "../types/auth";
 
-const FIREBASE_API_KEY = Constants.expoConfig?.extra?.firebaseApiKey || "";
+const FIREBASE_API_KEY = Constants.expoConfig?.extra?.firebaseApiKey;
 
 class AuthService {
   private readonly signInUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`;
