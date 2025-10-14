@@ -6,8 +6,10 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../hooks/useAuth";
 
@@ -20,11 +22,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   if (!user) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading profile...</Text>
-        </View>
-      </SafeAreaView>
+      <LinearGradient
+        colors={["#0f0f15", "#1a1a24", "#1e1e2e"]}
+        style={styles.gradient}
+      >
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator color="#a0d2eb" size="large" />
+            <Text style={styles.loadingText}>Loading profile...</Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
@@ -68,118 +76,152 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#333" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profile</Text>
-          <View style={styles.placeholder} />
-        </View>
-
-        {/* Profile Avatar */}
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            <Ionicons name="person" size={60} color="#8ca5baff" />
-          </View>
-          <Text style={styles.username}>@{user.username}</Text>
-        </View>
-
-        {/* Profile Info */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account Information</Text>
-
-          <View style={styles.infoRow}>
-            <View style={styles.infoLeft}>
-              <Ionicons name="mail-outline" size={20} color="#666" />
-              <Text style={styles.infoLabel}>Email</Text>
-            </View>
-            <Text style={styles.infoValue}>{user.email}</Text>
+    <LinearGradient
+      colors={["#0f0f15", "#1a1a24", "#1e1e2e"]}
+      style={styles.gradient}
+    >
+      <SafeAreaView style={styles.container}>
+        <ScrollView style={styles.scrollView}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="arrow-back" size={24} color="#a0d2eb" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Profile</Text>
+            <View style={styles.placeholder} />
           </View>
 
-          <View style={styles.infoRow}>
-            <View style={styles.infoLeft}>
-              <Ionicons name="person-outline" size={20} color="#666" />
-              <Text style={styles.infoLabel}>Username</Text>
-            </View>
-            <Text style={styles.infoValue}>{user.username}</Text>
+          {/* Profile Avatar */}
+          <View style={styles.avatarContainer}>
+            <LinearGradient
+              colors={["#a0d2eb", "#8458B3"]}
+              style={styles.avatar}
+            >
+              <Ionicons name="person" size={60} color="#fff" />
+            </LinearGradient>
+            <Text style={styles.username}>@{user.username}</Text>
           </View>
 
-          <View style={styles.infoRow}>
-            <View style={styles.infoLeft}>
-              <Ionicons name="finger-print-outline" size={20} color="#666" />
-              <Text style={styles.infoLabel}>User ID</Text>
-            </View>
-            <Text style={[styles.infoValue, styles.uidText]} numberOfLines={1}>
-              {user.uid}
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <View style={styles.infoLeft}>
-              <Ionicons name="calendar-outline" size={20} color="#666" />
-              <Text style={styles.infoLabel}>Member Since</Text>
-            </View>
-            <Text style={styles.infoValue}>{formatDate(user.createdAt)}</Text>
-          </View>
-        </View>
-
-        {/* Last Location */}
-        {user.lastLocation && (
+          {/* Profile Info */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Last Known Location</Text>
+            <Text style={styles.sectionTitle}>Account Information</Text>
 
             <View style={styles.infoRow}>
               <View style={styles.infoLeft}>
-                <Ionicons name="location-outline" size={20} color="#666" />
-                <Text style={styles.infoLabel}>Coordinates</Text>
+                <Ionicons name="mail-outline" size={20} color="#a0d2eb" />
+                <Text style={styles.infoLabel}>Email</Text>
               </View>
-              <Text style={styles.infoValue}>
-                {user.lastLocation.latitude.toFixed(4)},{" "}
-                {user.lastLocation.longitude.toFixed(4)}
+              <Text style={styles.infoValue}>{user.email}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <View style={styles.infoLeft}>
+                <Ionicons name="person-outline" size={20} color="#a0d2eb" />
+                <Text style={styles.infoLabel}>Username</Text>
+              </View>
+              <Text style={styles.infoValue}>{user.username}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <View style={styles.infoLeft}>
+                <Ionicons
+                  name="finger-print-outline"
+                  size={20}
+                  color="#a0d2eb"
+                />
+                <Text style={styles.infoLabel}>User ID</Text>
+              </View>
+              <Text
+                style={[styles.infoValue, styles.uidText]}
+                numberOfLines={1}
+              >
+                {user.uid}
               </Text>
             </View>
+
+            <View style={[styles.infoRow, styles.lastInfoRow]}>
+              <View style={styles.infoLeft}>
+                <Ionicons name="calendar-outline" size={20} color="#a0d2eb" />
+                <Text style={styles.infoLabel}>Member Since</Text>
+              </View>
+              <Text style={styles.infoValue}>{formatDate(user.createdAt)}</Text>
+            </View>
           </View>
-        )}
 
-        {/* Other Options */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Other Options</Text>
+          {/* Last Location */}
+          {user.lastLocation && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Last Known Location</Text>
 
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="key-outline" size={20} color="#8ca5baff" />
-            <Text style={styles.actionButtonText}>Change Password</Text>
-            <Ionicons name="chevron-forward" size={20} color="#ccc" />
-          </TouchableOpacity>
-        </View>
+              <View style={[styles.infoRow, styles.lastInfoRow]}>
+                <View style={styles.infoLeft}>
+                  <Ionicons name="location-outline" size={20} color="#a0d2eb" />
+                  <Text style={styles.infoLabel}>Coordinates</Text>
+                </View>
+                <Text style={styles.infoValue}>
+                  {user.lastLocation.latitude.toFixed(4)},{" "}
+                  {user.lastLocation.longitude.toFixed(4)}
+                </Text>
+              </View>
+            </View>
+          )}
 
-        {/* Logout Button */}
-        <View style={styles.logoutContainer}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={20} color="#fff" />
-            <Text style={styles.logoutButtonText}>Logout</Text>
-          </TouchableOpacity>
-        </View>
+          {/* Other Options */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Other Options</Text>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Last updated: {formatDate(user.updatedAt)}
-          </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            <TouchableOpacity style={[styles.actionButton, styles.lastInfoRow]}>
+              <Ionicons name="key-outline" size={20} color="#a0d2eb" />
+              <Text style={styles.actionButtonText}>Change Password</Text>
+              <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Logout Button */}
+          <View style={styles.logoutContainer}>
+            <TouchableOpacity onPress={handleLogout} activeOpacity={0.8}>
+              <LinearGradient
+                colors={["#ff6b6b", "#ee5a6f"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.logoutButton}
+              >
+                <Ionicons name="log-out-outline" size={20} color="#fff" />
+                <Text style={styles.logoutButtonText}>Logout</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              Last updated: {formatDate(user.updatedAt)}
+            </Text>
+          </View>
+
+          {/* Bottom Accent */}
+          <View style={styles.bottomAccent}>
+            <LinearGradient
+              colors={["transparent", "rgba(132, 88, 179, 0.2)", "transparent"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.accentLine}
+            />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
   },
   scrollView: {
     flex: 1,
@@ -191,76 +233,98 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: "#666",
+    color: "#e5eaf5",
+    marginTop: 16,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    paddingVertical: 16,
+    marginBottom: 20,
   },
   backButton: {
     padding: 8,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "600",
-    color: "#333",
+    color: "#e5eaf5",
   },
   placeholder: {
     width: 40,
   },
+  glowContainer: {
+    position: "absolute",
+    top: 100,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 0,
+  },
+  glow: {
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+  },
   avatarContainer: {
     alignItems: "center",
     paddingVertical: 32,
-    backgroundColor: "#fff",
-    marginBottom: 20,
+    marginBottom: 24,
+    zIndex: 10,
   },
   avatar: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "#f0f0f0",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
-    borderWidth: 3,
-    borderColor: "#8ca5baff",
+    shadowColor: "#8458B3",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   username: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#333",
+    color: "#e5eaf5",
   },
   section: {
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(30, 30, 46, 0.8)",
     marginHorizontal: 16,
     marginBottom: 20,
-    borderRadius: 8,
+    borderRadius: 12,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(160, 210, 235, 0.2)",
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
-    color: "#333",
-    backgroundColor: "#f8f8f8",
+    color: "#a0d2eb",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    backgroundColor: "rgba(160, 210, 235, 0.1)",
   },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: "rgba(160, 210, 235, 0.1)",
+  },
+  lastInfoRow: {
+    borderBottomWidth: 0,
   },
   infoLeft: {
     flexDirection: "row",
@@ -269,12 +333,12 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: "#666",
+    color: "#e5eaf5",
     marginLeft: 12,
   },
   infoValue: {
     fontSize: 14,
-    color: "#333",
+    color: "#f8f9fa",
     fontWeight: "500",
     maxWidth: "50%",
     textAlign: "right",
@@ -282,18 +346,19 @@ const styles = StyleSheet.create({
   uidText: {
     fontSize: 12,
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    color: "#d0bdf4",
   },
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: "rgba(160, 210, 235, 0.1)",
   },
   actionButtonText: {
     fontSize: 14,
-    color: "#333",
+    color: "#e5eaf5",
     marginLeft: 12,
     flex: 1,
   },
@@ -302,18 +367,25 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   logoutButton: {
+    height: 56,
+    borderRadius: 12,
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#ff4444",
-    paddingVertical: 14,
-    borderRadius: 8,
-    gap: 8,
+    alignItems: "center",
+    shadowColor: "#ff6b6b",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   logoutButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+    marginLeft: 8,
   },
   footer: {
     paddingHorizontal: 16,
@@ -322,7 +394,15 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: "#999",
+    color: "#6b7280",
+  },
+  bottomAccent: {
+    marginTop: 20,
+    marginBottom: 40,
+  },
+  accentLine: {
+    height: 2,
+    width: "100%",
   },
 });
 
