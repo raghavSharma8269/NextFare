@@ -8,7 +8,6 @@ import {
   Switch,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
 interface SettingsScreenProps {
@@ -62,7 +61,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
 
   return (
     <LinearGradient colors={["#0f0f15", "#1a1a24"]} style={styles.gradient}>
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
@@ -150,7 +149,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
             <Text style={styles.footerText}>NextFare © 2025</Text>
           </View>
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </LinearGradient>
   );
 };
