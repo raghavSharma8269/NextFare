@@ -35,6 +35,8 @@ public class EventService {
 
     public ResponseEntity<List<Event>> getActiveEventsInBound(GeoSearchDTO geoSearchDTO) {
 
+        log.info("Executing {}, input: {}", EventService.class.getSimpleName(), geoSearchDTO);
+
         double north = geoSearchDTO.getNorth();
         double south = geoSearchDTO.getSouth();
         double east = geoSearchDTO.getEast();
@@ -55,7 +57,7 @@ public class EventService {
             throw new IllegalArgumentException("East longitude must be greater than west longitude");
         }
 
-        String cacheKey = createCacheKey(north, south, east, west);
+        String cacheKey = createCacheKey(north, south, east, west, geoSearchDTO.getStartOfTimeRange(), geoSearchDTO.getEndOfTimeRange());
 
         List<Event> cachedEvents = (List<Event>) redisTemplate.opsForValue().get(cacheKey);
 
@@ -73,7 +75,7 @@ public class EventService {
                     north, south, east, west);
         }
 
-        List<Event> events = eventRepository.geoSearchActiveEvents(north, south, east, west, LocalDateTime.now());
+        List<Event> events = eventRepository.geoSearchActiveEvents(north, south, east, west, geoSearchDTO.getStartOfTimeRange(), geoSearchDTO.getEndOfTimeRange());
 
         try{
             redisTemplate.opsForValue().set(cacheKey, events, CACHE_TTL);
@@ -90,7 +92,7 @@ public class EventService {
     /**
      * Get active events within a radius from a center point (for default user experience)
      */
-    public ResponseEntity<List<Event>> getActiveEventsWithinRadius(double centerLat, double centerLng, double radiusMiles) {
+    public ResponseEntity<List<Event>> getActiveEventsWithinRadius(double centerLat, double centerLng, double radiusMiles, LocalDateTime startTime, LocalDateTime endTime) {
 
         log.info("Getting active events within {} miles of {}, {}", radiusMiles, centerLat, centerLng);
 
@@ -112,6 +114,8 @@ public class EventService {
         geoSearchDTO.setSouth(south);
         geoSearchDTO.setEast(east);
         geoSearchDTO.setWest(west);
+        geoSearchDTO.setStartOfTimeRange(startTime);
+        geoSearchDTO.setEndOfTimeRange(endTime);
 
         log.info("Converted to bounds: north={}, south={}, east={}, west={}", north, south, east, west);
 
@@ -132,7 +136,7 @@ public class EventService {
                 east <= nycEastLimit && west >= nycWestLimit;
     }
 
-    private String createCacheKey(double north, double south, double east, double west) {
+    private String createCacheKey(double north, double south, double east, double west, LocalDateTime startTime, LocalDateTime endTime) {
 
         // Round to 4 decimal places to group similar requests together
         String roundedNorth = String.format("%.4f", north);
@@ -140,7 +144,10 @@ public class EventService {
         String roundedEast = String.format("%.4f", east);
         String roundedWest = String.format("%.4f", west);
 
-        return CACHE_PREFIX + roundedNorth + ":" + roundedSouth + ":" + roundedEast + ":" + roundedWest;
+        String startTimeStr = startTime.toString();
+        String endTimeStr = endTime.toString();
+
+        return CACHE_PREFIX + roundedNorth + ":" + roundedSouth + ":" + roundedEast + ":" + roundedWest + "time:" + startTimeStr + ":" + endTimeStr;
     }
 
     public void clearEventCache() {
