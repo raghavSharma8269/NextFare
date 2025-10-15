@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
@@ -160,7 +159,7 @@ const MapScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <LinearGradient
           colors={["#0f0f15", "#1a1a24"]}
           style={styles.loadingContainer}
@@ -168,12 +167,12 @@ const MapScreen: React.FC = () => {
           <ActivityIndicator size="large" color="#a0d2eb" />
           <Text style={styles.loadingText}>Getting your location...</Text>
         </LinearGradient>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.content}>
         {location && (
           <MapView
@@ -216,7 +215,6 @@ const MapScreen: React.FC = () => {
           </MapView>
         )}
 
-        {/* Event Counter */}
         <LinearGradient
           colors={["rgba(26, 26, 36, 0.95)", "rgba(30, 30, 46, 0.95)"]}
           start={{ x: 0, y: 0 }}
@@ -232,7 +230,6 @@ const MapScreen: React.FC = () => {
           {eventsError && <Text style={styles.errorText}>{eventsError}</Text>}
         </LinearGradient>
 
-        {/* Floating Action Buttons */}
         <View style={styles.fabContainer}>
           <TouchableOpacity
             onPress={handleRefresh}
@@ -261,7 +258,7 @@ const MapScreen: React.FC = () => {
           onClose={closeEventInfo}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -272,6 +269,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    paddingTop: 80,
   },
   loadingContainer: {
     flex: 1,
@@ -289,7 +287,7 @@ const styles = StyleSheet.create({
   },
   eventCounter: {
     position: "absolute",
-    top: 20,
+    top: 100,
     left: 20,
     right: 20,
     borderRadius: 16,
