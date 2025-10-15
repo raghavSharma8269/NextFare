@@ -11,4 +11,6 @@ public class GeoSearchDTO {
     private double east;
     private double west;
     private LocalDateTime now;
+    private LocalDateTime startOfTimeRange;
+    private LocalDateTime endOfTimeRange;
 }
