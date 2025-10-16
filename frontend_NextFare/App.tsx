@@ -19,7 +19,6 @@ import { useAuth } from "./hooks/useAuth";
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// Auth Stack (Login/Register)
 function AuthStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -29,7 +28,6 @@ function AuthStack() {
   );
 }
 
-// Main App Tabs (Map/Settings)
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -49,6 +47,7 @@ function MainTabs() {
         },
         tabBarActiveTintColor: "#a0d2eb",
         tabBarInactiveTintColor: "#6b7280",
+        tabBarShowLabel: false,
         tabBarStyle: {
           backgroundColor: "#1a1a24",
           borderTopWidth: 1,
@@ -56,10 +55,6 @@ function MainTabs() {
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
-        },
-        tabBarLabelStyle: {
-          fontFamily: "Sansation-Bold",
-          fontSize: 12,
         },
         headerStyle: {
           backgroundColor: "#1a1a24",
@@ -75,8 +70,11 @@ function MainTabs() {
         name="Map"
         component={MapScreen}
         options={{
-          title: "NextFare",
-          headerTitle: "NextFare",
+          title: "Map",
+          headerTitle: "Map",
+          headerTitleStyle: {
+            fontFamily: "Sansation-Bold",
+          },
         }}
       />
       <Tab.Screen
@@ -92,7 +90,6 @@ function MainTabs() {
   );
 }
 
-// Settings Stack with Profile screen
 function SettingsStack() {
   return (
     <Stack.Navigator>
@@ -121,7 +118,6 @@ function SettingsStack() {
   );
 }
 
-// Navigation Logic based on Auth State
 function AppNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -140,7 +136,6 @@ function AppNavigator() {
   );
 }
 
-// Root App Component
 export default function App() {
   return (
     <SafeAreaProvider>
